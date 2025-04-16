@@ -17,6 +17,17 @@ function areaTriangle(v1, v2){
 
 var g_points = [];
 
+var VSHADER_SOURCE = 
+    "void main() {\n" +
+    "   gl_Position = vec4(0.0, 0.0, 0.0, 1.0);\n" + // Set the vertex coordinates of the point
+    "   gl_PointSize = 10.0;\n" + 
+    "}\n";
+
+var FSHADER_SOURCE = 
+    "void main() {\n" +
+    "   gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n" +
+    "}\n";
+
 function main() {
     const red = 'rgba(255, 0, 0, 1.0)';
     const green = 'rgba(0, 255, 0, 1.0)';
@@ -28,11 +39,12 @@ function main() {
         console.log('Failed to retrieve the <canvas> element');
         return false;
     }
-    const cwidth = document.getElementById('example').clientWidth;
-    const cheight = document.getElementById('example').clientHeight;
+    const cwidth = canvas.clientWidth;
+    const cheight = canvas.clientHeight;
 
     // Get the rendering context for 2DCG
-    var ctx = canvas.getContext('2d');
+    // var ctx = canvas.getContext('2d');
+    var gl = canvas.getWebGLContext('webgl');
     allPoints = [];
     // var v0 = new Vector3();
     // var v1 = new Vector3([2.25, 2.25, 0]);
