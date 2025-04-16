@@ -90,18 +90,31 @@ function connectVariablesToGLSL(){
     }
 }
 
+// Constants
+const POINT = 0;
+const TRIANGLE = 1;
+const CIRCLE = 2;
+
+// Globals related to UI Elements
 var g_selectedColor = [1.0, 1.0, 1.0, 1.0];
 var g_selectedSize = 10;
+var g_selectedType = POINT;
+var g_segments = 6;
 
 function addActionsForHtmlUI(){
     // Button Events
     document.getElementById('green').onclick = function(){g_selectedColor = [0.0, 1.0, 0.0, 1.0]};
     document.getElementById('red').onclick = function(){g_selectedColor = [1.0, 0.0, 0.0, 1.0]};
-    document.getElementById('clear').onclick = function(){
+    document.getElementById('clearButton').onclick = function(){
         g_shapesList = [];
         gl.clear(gl.COLOR_BUFFER_BIT);
     };
-    
+
+    // Button Shape Events
+    document.getElementById('pointButton').onclick = function(){g_selectedType=POINT};
+    document.getElementById('triangleButton').onclick = function(){g_selectedType=TRIANGLE};
+    document.getElementById('circleButton').onclick = function(){g_selectedType=CIRCLE};
+
     // Slider Events
     var redSlide = document.getElementById('redSlide');
     redSlide.addEventListener('mouseup', function(){ g_selectedColor[0] = redSlide.value/255.0});
@@ -114,6 +127,10 @@ function addActionsForHtmlUI(){
 
     var sizeSlide = document.getElementById('sizeSlide');
     sizeSlide.addEventListener('mouseup', function(){g_selectedSize = this.value});
+
+    // Circle Segment Slider
+    var segmentSlide = document.getElementById('segmentSlide');
+    segmentSlide.addEventListener('mouseup', function(){g_segments = this.value});
 }
 
 function sendPerformanceStatsToHTML(text, id){
@@ -156,7 +173,14 @@ function convertCoordinatesToGLSL(event){
 }
 
 function createAndStorePoint([x, y]){
-    let point = new Point();
+    let point;
+    if (g_selectedType == POINT){ point = new Point() }
+    else if (g_selectedType == TRIANGLE){ point = new Triangle() }
+    else if (g_selectedType == CIRCLE){ 
+        point = new Circle();
+        point.segments=g_segments;
+    }
+
     point.position=[x, y];
     point.color=g_selectedColor.slice();
     point.size=g_selectedSize;

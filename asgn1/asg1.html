@@ -14,13 +14,20 @@
         <script src="lib/webgl-utils.js"></script>
         <script src="Point.js"></script>
         <script src="Triangle.js"></script>
+        <script src="Circle.js"></script>
         <script src="asg1.js"></script>
 
         <form id="drawForm">
             <p id="numdot">___</p>
+            
             <input type="button" value="Green" id="green"/>
             <input type="button" value="Red" id="red"/> 
-            <input type="button" value="Clear" id="clear"/> 
+            <input type="button" value="Clear" id="clearButton"/> 
+            <br>
+
+            <input type="button" value="Point" id="pointButton"/>
+            <input type="button" value="Triangle" id="triangleButton"/> 
+            <input type="button" value="Circle" id="circleButton"/> 
             <br>
 
             
@@ -35,6 +42,9 @@
 
             <label for="sizeSlide">Size</label>
             <input type="range" id="sizeSlide" min="1" max="100" value="10"> <br>
+
+            <label for="segmentSlide">Circle Segments</label>
+            <input type="range" id="segmentSlide" min="6" max="60" value="12"> <br>
             
             <!-- <label for="x1">v1 x: </label>
             <input type="text" id="x1">

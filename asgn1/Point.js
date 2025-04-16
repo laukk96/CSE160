@@ -12,6 +12,9 @@ class Point{
         let rgba = this.color;
         let size = this.size;
 
+        // Edit: Because of Triangle.js, we need to quit using buffer to send attribute
+        gl.disableVertexAttribArray(a_Position);
+
         // Pass position to a_Position variable
         gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
         // Pass color to u_FragColor variable
