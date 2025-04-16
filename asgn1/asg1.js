@@ -15,6 +15,8 @@ function areaTriangle(v1, v2){
     return area;
 }
 
+var g_points = [];
+
 function main() {
     const red = 'rgba(255, 0, 0, 1.0)';
     const green = 'rgba(0, 255, 0, 1.0)';
@@ -31,6 +33,7 @@ function main() {
 
     // Get the rendering context for 2DCG
     var ctx = canvas.getContext('2d');
+    allPoints = [];
     // var v0 = new Vector3();
     // var v1 = new Vector3([2.25, 2.25, 0]);
     
@@ -46,12 +49,10 @@ function main() {
         ctx.stroke();
     }
 
-    function drawPoint(){
-        const ox = cwidth/2;
-        const oy = cheight/2;
+    function drawPoint(ox, oy){
         const psize = 10;
         ctx.fillStyle = red;
-        ctx.fillRect(ox-psize/2, oy-psize/2, psize/2, psize/2);
+        ctx.fillRect(ox-psize/2, oy-psize/2, psize, psize);
     }
 
     function initCanvas(){
@@ -64,7 +65,31 @@ function main() {
     // var v2t = new Vector3();
 
     initCanvas();
-    drawPoint();
+    // drawPoint(cwidth/2, cheight/2);
+
+    canvas.onmousedown = function(event){
+        addPoint(event, ctx, canvas);
+        initCanvas();
+        for (let i = 0; i < g_points.length; i++){
+            drawPoint(g_points[i][0], g_points[i][1]);
+        }
+    }
+}
+
+function addPoint(event, ctx, canvas){
+    var x = event.clientX;
+    var y = event.clientY;
+    console.log("init point: ", x, " ", y);
+    var rect = event.target.getBoundingClientRect();
+
+    // x = ((x - rect.left) - canvas.width/2) / (canvas.width/2);
+    // y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+
+    if (x >= 0.0 && y > 0.0){
+        g_points.push([x, y]);
+    }
+    console.log("point added! ", x, " ", y);
+};
 
     // function drawRegularVectors(){
     //     var x1 = document.getElementById("x1").value;
@@ -138,6 +163,5 @@ function main() {
     //         console.log("Area of Triangle:", areaTriangle(v1t, v2t));
     //     }
     // });
-}
 
   
