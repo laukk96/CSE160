@@ -22,9 +22,10 @@ var g_points = [];
 // Vertex Shader Program
 var VSHADER_SOURCE = `
     attribute vec4 a_Position;
+    uniform float u_Size;
     void main() {
     gl_Position = a_Position;
-       gl_PointSize = 10.0; 
+       gl_PointSize = u_Size; 
     }`;
 
 var FSHADER_SOURCE = `
@@ -35,11 +36,12 @@ var FSHADER_SOURCE = `
     }`;
 
 // Globals
-let canvas;
+var canvas;
 /** @type {WebGLRenderingContext} */
-let gl;
-let a_Position;
-let u_FragColor;
+var gl;
+var a_Position;
+var u_FragColor;
+var u_Size;
 
 // Functions from 1.3a
 function setupWebGL(){
@@ -66,29 +68,53 @@ function connectVariablesToGLSL(){
     }
 
     // Get the storage location of a_Position
-    a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    a_Position = gl.getAttribLocation(gl.program, 'a_Position'); // Javascript Pointer to the GLSL variable 
     if (a_Position < 0){
-        console.log('Failed to get the stoarge location of a_Position');
+        console.log('Failed to get the storage location of a_Position');
+        return;
+    }
+    // Get the storage location of u_Size
+    u_Size = gl.getUniformLocation(gl.program, 'u_Size');
+    if (!u_Size){
+        console.log('Failed to get the storage location of u_Size');
         return;
     }
 
-    // Get the stoarge location of u_FragColor variable
+    // Get the storage location of u_FragColor variable
     u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
-    if (u_FragColor < 0){
-        console.log('Failed to get the stoarge location of u_FragColor');
+    if (!u_FragColor){
+        console.log('Failed to get the storage location of u_FragColor');
         return;
     }
 }
 
+var g_selectedColor = [1.0, 1.0, 1.0, 1.0];
+var g_selectedSize = 10;
+
+function addActionsForHtmlUI(){
+    // Button Events
+    document.getElementById('green').onclick = function(){g_selectedColor = [0.0, 1.0, 0.0, 1.0]};
+    document.getElementById('red').onclick = function(){g_selectedColor = [1.0, 0.0, 0.0, 1.0]};
+    
+    // Slider Events
+    var redSlide = document.getElementById('redSlide');
+    redSlide.addEventListener('mouseup', function(){ g_selectedColor[0] = redSlide.value/255.0});
+
+    var greenSlide = document.getElementById('greenSlide');
+    greenSlide.addEventListener('mouseup', function(){ g_selectedColor[1] = greenSlide.value/255.0});
+
+    var blueSlide = document.getElementById('blueSlide');
+    blueSlide.addEventListener('mouseup', function(){ g_selectedColor[2] = blueSlide.value/255.0});
+
+    var sizeSlide = document.getElementById('sizeSlide');
+    sizeSlide.addEventListener('mouseup', function(){g_selectedSize = this.value});
+}
+
 // Main
 function main() {
-    const red = 'rgba(255, 0, 0, 1.0)';
-    const green = 'rgba(0, 255, 0, 1.0)';
-    const blue = 'rgba(0, 0, 255, 1.0)';
-    const black = 'rgba(0, 0, 0, 1.0)';
-    
     setupWebGL();
     connectVariablesToGLSL();
+    addActionsForHtmlUI();
 
     // Specify color for clearing <canvas>
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -101,16 +127,18 @@ function main() {
 
 var g_points = [];
 var g_colors = [];
+var g_sizes = [];
+
 
 function convertCoordinatesToGLSL(event){
-    var x = event.clientX;
-    var y = event.clientY;
-    var rect = event.target.getBoundingClientRect();
+    let x = event.clientX;
+    let y = event.clientY;
+    let rect = event.target.getBoundingClientRect();
 
     x = ((x - rect.left) - canvas.width/2) / (canvas.width/2);
     y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
 
-    return [x, y];
+    return([x, y]);
 }
 
 function renderAllShapes(){
@@ -118,34 +146,39 @@ function renderAllShapes(){
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // Draw all points
-    var len = g_points.length;
+    let len = g_points.length;
     for (let i = 0; i < len; i++){
-        var xy = g_points[i];
-        var rgba = g_colors[i];
+        let xy = g_points[i];
+        let rgba = g_colors[i];
+        let size = g_sizes[i];
 
         // Pass position to a_Position variable
         gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
         // Pass color to u_FragColor variable
         gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+        // Pass size
+        gl.uniform1f(u_Size, size);
         // Draw Point
         gl.drawArrays(gl.POINTS, 0, 1);
     }
 }
 
 function click(event){
-    [x, y] = convertCoordinatesToGLSL(event);
+    let xy = [x, y] = convertCoordinatesToGLSL(event);
 
     // Store points to g_points array
-    g_points.push([x, y]);
+    g_points.push(xy);
 
     // Store colors to g_colors array
-    if (x >= 0.0 && y >= 0.0){
-        g_colors.push([1.0, 0.0, 0.0, 1.0]); // Red
-    } else if (x < 0.0 && y < 0.0){
-        g_colors.push([0.0, 1.0, 0.0, 1.0]); // Green
-    } else {
-        g_colors.push([1.0, 1.0, 1.0, 1.0]); // White
-    }
+    // if (x >= 0.0 && y >= 0.0){
+    //     g_colors.push([1.0, 0.0, 0.0, 1.0]); // Red
+    // } else if (x < 0.0 && y < 0.0){
+    //     g_colors.push([0.0, 1.0, 0.0, 1.0]); // Green
+    // } else {
+    //     g_colors.push([1.0, 1.0, 1.0, 1.0]); // White
+    // }
+    g_colors.push(g_selectedColor.slice());
+    g_sizes.push(g_selectedSize);
 
-    renderAllShapes();  
+    renderAllShapes(); 
 };

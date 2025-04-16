@@ -14,8 +14,23 @@
         <script src="lib/webgl-utils.js"></script>
         <script src="asg1.js"></script>
 
-        <form id="vectorDrawForm">
-            <label for="x1">v1 x: </label>
+        <form id="drawForm">
+            <input type="button" value="Green" id="green"/>
+            <input type="button" value="Red" id="red"/> <br>
+            
+            <label for="redSlide">Red</label>
+            <input type="range" id="redSlide" min="0" max="255"> <br>
+
+            <label for="greenSlide">Green</label>
+            <input type="range" id="greenSlide" min="0" max="255"> <br>
+
+            <label for="blueSlide">Blue</label>
+            <input type="range" id="blueSlide" min="0" max="255"> <br>
+
+            <label for="sizeSlide">Size</label>
+            <input type="range" id="sizeSlide" min="1" max="100" value="10"> <br>
+            
+            <!-- <label for="x1">v1 x: </label>
             <input type="text" id="x1">
             
             <label for="y1">y: </label>
@@ -42,7 +57,7 @@
             </select>
 
             <label>Scalar</label>
-            <input type="text" id="scalar text">
+            <input type="text" id="scalar text"> -->
 
         </form>
     </body>
