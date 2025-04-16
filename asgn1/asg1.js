@@ -36,6 +36,7 @@ var FSHADER_SOURCE = `
     }`;
 
 // Globals
+/** @type {HTMLCanvasElement} */
 var canvas;
 /** @type {WebGLRenderingContext} */
 var gl;
@@ -53,7 +54,8 @@ function setupWebGL(){
     }
     
     // Get the rendering context for WebGL
-    gl = getWebGLContext(canvas);
+    // gl = getWebGLContext(canvas);
+    gl = canvas.getContext('webgl', {preserveDrawingBuffer: true});
     if (!gl){
         console.log('Failed to return the rendering context for WebGL');
         return;
@@ -95,6 +97,10 @@ function addActionsForHtmlUI(){
     // Button Events
     document.getElementById('green').onclick = function(){g_selectedColor = [0.0, 1.0, 0.0, 1.0]};
     document.getElementById('red').onclick = function(){g_selectedColor = [1.0, 0.0, 0.0, 1.0]};
+    document.getElementById('clear').onclick = function(){
+        g_shapesList = [];
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    };
     
     // Slider Events
     var redSlide = document.getElementById('redSlide');
@@ -110,6 +116,15 @@ function addActionsForHtmlUI(){
     sizeSlide.addEventListener('mouseup', function(){g_selectedSize = this.value});
 }
 
+function sendPerformanceStatsToHTML(text, id){
+    elem = document.getElementById(id);
+    if (!elem){
+        console.log("Cannot find element with id="+id);
+        return;
+    }
+    elem.innerHTML = text;
+}
+
 // Main
 function main() {
     setupWebGL();
@@ -120,15 +135,14 @@ function main() {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    canvas.onmousedown = function(event){
-        click(event);
-    }
+    canvas.onmousedown = click;
+    canvas.onmousemove = function(ev){ if (ev.buttons == 1){ click(ev); } };
 }
 
-var g_points = [];
-var g_colors = [];
-var g_sizes = [];
-
+// var g_points = [];
+// var g_colors = [];
+// var g_sizes = [];
+var g_shapesList = [];
 
 function convertCoordinatesToGLSL(event){
     let x = event.clientX;
@@ -141,44 +155,35 @@ function convertCoordinatesToGLSL(event){
     return([x, y]);
 }
 
+function createAndStorePoint([x, y]){
+    let point = new Point();
+    point.position=[x, y];
+    point.color=g_selectedColor.slice();
+    point.size=g_selectedSize;
+    g_shapesList.push(point);
+}
+
 function renderAllShapes(){
+    let startTime = performance.now();
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // Draw all points
-    let len = g_points.length;
+    let len = g_shapesList.length;
     for (let i = 0; i < len; i++){
-        let xy = g_points[i];
-        let rgba = g_colors[i];
-        let size = g_sizes[i];
-
-        // Pass position to a_Position variable
-        gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
-        // Pass color to u_FragColor variable
-        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
-        // Pass size
-        gl.uniform1f(u_Size, size);
-        // Draw Point
-        gl.drawArrays(gl.POINTS, 0, 1);
+        g_shapesList[i].render();
     }
+
+    let duration = performance.now() - startTime;
+    sendPerformanceStatsToHTML("numdot: " + len + " | ms: " + Math.floor(duration) + " | fps: " + Math.floor(10000/duration)/10, "numdot");
 }
 
+
+
 function click(event){
-    let xy = [x, y] = convertCoordinatesToGLSL(event);
+    [x, y] = convertCoordinatesToGLSL(event);
 
-    // Store points to g_points array
-    g_points.push(xy);
-
-    // Store colors to g_colors array
-    // if (x >= 0.0 && y >= 0.0){
-    //     g_colors.push([1.0, 0.0, 0.0, 1.0]); // Red
-    // } else if (x < 0.0 && y < 0.0){
-    //     g_colors.push([0.0, 1.0, 0.0, 1.0]); // Green
-    // } else {
-    //     g_colors.push([1.0, 1.0, 1.0, 1.0]); // White
-    // }
-    g_colors.push(g_selectedColor.slice());
-    g_sizes.push(g_selectedSize);
+    createAndStorePoint([x, y]);
 
     renderAllShapes(); 
 };
