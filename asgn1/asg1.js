@@ -41,7 +41,7 @@ let gl;
 let a_Position;
 let u_FragColor;
 
-// Function 1.3
+// Functions from 1.3a
 function setupWebGL(){
     // Retrieve the <canvas> element
     canvas = document.getElementById('webgl');
@@ -58,15 +58,7 @@ function setupWebGL(){
     }
 }
 
-// MAIN
-function main() {
-    const red = 'rgba(255, 0, 0, 1.0)';
-    const green = 'rgba(0, 255, 0, 1.0)';
-    const blue = 'rgba(0, 0, 255, 1.0)';
-    const black = 'rgba(0, 0, 0, 1.0)';
-    
-    setupWebGL();
-
+function connectVariablesToGLSL(){
     // Initialize Shaders
     if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)){
         console.log('Failed to initialize shaders.');
@@ -86,20 +78,31 @@ function main() {
         console.log('Failed to get the stoarge location of u_FragColor');
         return;
     }
+}
+
+// Main
+function main() {
+    const red = 'rgba(255, 0, 0, 1.0)';
+    const green = 'rgba(0, 255, 0, 1.0)';
+    const blue = 'rgba(0, 0, 255, 1.0)';
+    const black = 'rgba(0, 0, 0, 1.0)';
+    
+    setupWebGL();
+    connectVariablesToGLSL();
 
     // Specify color for clearing <canvas>
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    
+
     canvas.onmousedown = function(event){
-        click(event, gl, canvas, a_Position, u_FragColor);
+        click(event);
     }
 }
 
 var g_points = [];
 var g_colors = [];
 
-function click(event, gl, canvas, a_Position, u_FragColor){
+function convertCoordinatesToGLSL(event){
     var x = event.clientX;
     var y = event.clientY;
     var rect = event.target.getBoundingClientRect();
@@ -107,18 +110,10 @@ function click(event, gl, canvas, a_Position, u_FragColor){
     x = ((x - rect.left) - canvas.width/2) / (canvas.width/2);
     y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
 
-    // Store points to g_points array
-    g_points.push([x, y]);
+    return [x, y];
+}
 
-    // Store colors to g_colors array
-    if (x >= 0.0 && y >= 0.0){
-        g_colors.push([1.0, 0.0, 0.0, 1.0]); // Red
-    } else if (x < 0.0 && y < 0.0){
-        g_colors.push([0.0, 1.0, 0.0, 1.0]); // Green
-    } else {
-        g_colors.push([1.0, 1.0, 1.0, 1.0]); // White
-    }
-
+function renderAllShapes(){
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -135,4 +130,22 @@ function click(event, gl, canvas, a_Position, u_FragColor){
         // Draw Point
         gl.drawArrays(gl.POINTS, 0, 1);
     }
+}
+
+function click(event){
+    [x, y] = convertCoordinatesToGLSL(event);
+
+    // Store points to g_points array
+    g_points.push([x, y]);
+
+    // Store colors to g_colors array
+    if (x >= 0.0 && y >= 0.0){
+        g_colors.push([1.0, 0.0, 0.0, 1.0]); // Red
+    } else if (x < 0.0 && y < 0.0){
+        g_colors.push([0.0, 1.0, 0.0, 1.0]); // Green
+    } else {
+        g_colors.push([1.0, 1.0, 1.0, 1.0]); // White
+    }
+
+    renderAllShapes();  
 };
