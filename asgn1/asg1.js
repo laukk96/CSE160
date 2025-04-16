@@ -15,165 +15,124 @@ function areaTriangle(v1, v2){
     return area;
 }
 
+
 var g_points = [];
 
-var VSHADER_SOURCE = 
-    "void main() {\n" +
-    "   gl_Position = vec4(0.0, 0.0, 0.0, 1.0);\n" + // Set the vertex coordinates of the point
-    "   gl_PointSize = 10.0;\n" + 
-    "}\n";
 
-var FSHADER_SOURCE = 
-    "void main() {\n" +
-    "   gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n" +
-    "}\n";
+// Vertex Shader Program
+var VSHADER_SOURCE = `
+    attribute vec4 a_Position;
+    void main() {
+    gl_Position = a_Position;
+       gl_PointSize = 10.0; 
+    }`;
 
+var FSHADER_SOURCE = `
+    precision mediump float;
+    uniform vec4 u_FragColor;
+    void main() {
+       gl_FragColor = u_FragColor;
+    }`;
+
+// Globals
+let canvas;
+/** @type {WebGLRenderingContext} */
+let gl;
+let a_Position;
+let u_FragColor;
+
+// Function 1.3
+function setupWebGL(){
+    // Retrieve the <canvas> element
+    canvas = document.getElementById('webgl');
+    if (!canvas) {
+        console.log('Failed to retrieve the <canvas> element');
+        return;
+    }
+    
+    // Get the rendering context for WebGL
+    gl = getWebGLContext(canvas);
+    if (!gl){
+        console.log('Failed to return the rendering context for WebGL');
+        return;
+    }
+}
+
+// MAIN
 function main() {
     const red = 'rgba(255, 0, 0, 1.0)';
     const green = 'rgba(0, 255, 0, 1.0)';
     const blue = 'rgba(0, 0, 255, 1.0)';
     const black = 'rgba(0, 0, 0, 1.0)';
-    // Retrieve the <canvas> element
-    var canvas = document.getElementById('example');
-    if (!canvas) {
-        console.log('Failed to retrieve the <canvas> element');
-        return false;
-    }
-    const cwidth = canvas.clientWidth;
-    const cheight = canvas.clientHeight;
-
-    // Get the rendering context for 2DCG
-    // var ctx = canvas.getContext('2d');
-    var gl = canvas.getWebGLContext('webgl');
-    allPoints = [];
-    // var v0 = new Vector3();
-    // var v1 = new Vector3([2.25, 2.25, 0]);
     
-    function drawVector(v, color){
-        const scale = 20;
-        const originx = cwidth/2;
-        const originy = cheight/2;
+    setupWebGL();
 
-        ctx.strokeStyle = color;
-        ctx.beginPath();
-        ctx.moveTo(originx, originy);
-        ctx.lineTo(originx + v.elements[0]*scale, originy + v.elements[1]*scale);
-        ctx.stroke();
+    // Initialize Shaders
+    if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)){
+        console.log('Failed to initialize shaders.');
+        return;
     }
 
-    function drawPoint(ox, oy){
-        const psize = 10;
-        ctx.fillStyle = red;
-        ctx.fillRect(ox-psize/2, oy-psize/2, psize, psize);
+    // Get the storage location of a_Position
+    a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    if (a_Position < 0){
+        console.log('Failed to get the stoarge location of a_Position');
+        return;
     }
 
-    function initCanvas(){
-        // Draw a black rectangle canvas
-        ctx.fillStyle = black;  // Set a black color
-        ctx.fillRect(0, 0, cwidth, cheight);         // Fill a rectangle with the color
+    // Get the stoarge location of u_FragColor variable
+    u_FragColor = gl.getUniformLocation(gl.program, 'u_FragColor');
+    if (u_FragColor < 0){
+        console.log('Failed to get the stoarge location of u_FragColor');
+        return;
     }
 
-    // var v1t = new Vector3();
-    // var v2t = new Vector3();
-
-    initCanvas();
-    // drawPoint(cwidth/2, cheight/2);
-
+    // Specify color for clearing <canvas>
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    
     canvas.onmousedown = function(event){
-        addPoint(event, ctx, canvas);
-        initCanvas();
-        for (let i = 0; i < g_points.length; i++){
-            drawPoint(g_points[i][0], g_points[i][1]);
-        }
+        click(event, gl, canvas, a_Position, u_FragColor);
     }
 }
 
-function addPoint(event, ctx, canvas){
+var g_points = [];
+var g_colors = [];
+
+function click(event, gl, canvas, a_Position, u_FragColor){
     var x = event.clientX;
     var y = event.clientY;
-    console.log("init point: ", x, " ", y);
     var rect = event.target.getBoundingClientRect();
 
-    // x = ((x - rect.left) - canvas.width/2) / (canvas.width/2);
-    // y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+    x = ((x - rect.left) - canvas.width/2) / (canvas.width/2);
+    y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
 
-    if (x >= 0.0 && y > 0.0){
-        g_points.push([x, y]);
+    // Store points to g_points array
+    g_points.push([x, y]);
+
+    // Store colors to g_colors array
+    if (x >= 0.0 && y >= 0.0){
+        g_colors.push([1.0, 0.0, 0.0, 1.0]); // Red
+    } else if (x < 0.0 && y < 0.0){
+        g_colors.push([0.0, 1.0, 0.0, 1.0]); // Green
+    } else {
+        g_colors.push([1.0, 1.0, 1.0, 1.0]); // White
     }
-    console.log("point added! ", x, " ", y);
+
+    // Clear <canvas>
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // Draw all points
+    var len = g_points.length;
+    for (let i = 0; i < len; i++){
+        var xy = g_points[i];
+        var rgba = g_colors[i];
+
+        // Pass position to a_Position variable
+        gl.vertexAttrib3f(a_Position, xy[0], xy[1], 0.0);
+        // Pass color to u_FragColor variable
+        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+        // Draw Point
+        gl.drawArrays(gl.POINTS, 0, 1);
+    }
 };
-
-    // function drawRegularVectors(){
-    //     var x1 = document.getElementById("x1").value;
-    //     var y1 = document.getElementById("y1").value;
-
-    //     var x2 = document.getElementById("x2").value;
-    //     var y2 = document.getElementById("y2").value;
-
-    //     v1t = new Vector3([parseFloat(x1), parseFloat(y1), 0]);
-    //     v2t = new Vector3([parseFloat(x2), parseFloat(y2), 0]);
-
-    //     drawVector(v1t, 'rgba(255, 0, 0, 1.0');
-    //     drawVector(v2t, 'rgba(0, 0, 255, 1.0');
-    // }
-
-    // initCanvas();
-    // drawRegularVectors();
-
-    // Submit button event listener
-    // document.getElementById("vectorDrawForm").addEventListener("submit", function(event){
-    //     event.preventDefault();
-    //     initCanvas();
-    //     drawRegularVectors();
-
-    //     // Draw the select operation
-    //     var selectValue = document.getElementById("select_operations").value;
-        
-    //     // Operations
-    //     var v3 = new Vector3();
-
-    //     if (selectValue === "Add"){
-    //         v3 = v1t.add(v2t);
-    //         drawVector(v1t, green);
-    //         console.log(v3.elements);
-    //     }
-    //     else if (selectValue === "Subtract"){
-    //         v3 = v1t.sub(v2t);
-    //         drawVector(v1t, green);
-    //         console.log(v3.elements);
-    //     }
-    //     else if (selectValue === "Multiply"){
-    //         var scalar = parseFloat(document.getElementById("scalar text").value);
-    //         v1t.mul(scalar);
-    //         drawVector(v1t, green);
-    //         v2t.mul(scalar);
-    //         drawVector(v2t, green);
-    //         console.log(scalar, v1t.elements);
-    //     }
-    //     else if (selectValue === "Divide"){
-    //         var scalar = parseFloat(document.getElementById("scalar text").value);
-    //         v1t.div(scalar);
-    //         drawVector(v1t, green);
-    //         v2t.div(scalar);
-    //         drawVector(v2t, green);
-    //         console.log(scalar, v1t.elements);
-    //     }
-    //     else if (selectValue === "Magnitude"){
-    //         console.log("v1 magnitude: ", v1t.magnitude());
-    //         console.log("v2 magnitude: ", v2t.magnitude());
-    //     }
-    //     else if (selectValue === "Normalize"){
-    //         v1t.normalize();
-    //         drawVector(v1t, green);
-    //         v2t.normalize();
-    //         drawVector(v2t, green);
-    //     }
-    //     else if (selectValue === "Angle Between"){
-    //         console.log("Angle Between:", angleBetween(v1t, v2t));
-    //     }
-    //     else if (selectValue === "Area"){
-    //         console.log("Area of Triangle:", areaTriangle(v1t, v2t));
-    //     }
-    // });
-
-  

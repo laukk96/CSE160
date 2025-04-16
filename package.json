@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@types/webgl2": "^0.0.11"
+  }
+}
