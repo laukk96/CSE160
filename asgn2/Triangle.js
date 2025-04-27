@@ -77,4 +77,5 @@ function drawTriangle3D(vertices){
     gl.enableVertexAttribArray(a_Position);
  
     gl.drawArrays(gl.TRIANGLES, 0, n);
+    console.log('triangle being drawn:' + vertices);
  }

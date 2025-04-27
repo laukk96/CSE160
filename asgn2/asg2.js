@@ -22,10 +22,10 @@ var g_points = [];
 // Vertex Shader Program
 var VSHADER_SOURCE = `
     attribute vec4 a_Position;
-    uniform float u_Size;
+    uniform mat4 u_ModelMatrix;
+    uniform mat4 u_GlobalRotateMatrix;
     void main() {
-    gl_Position = a_Position;
-       gl_PointSize = u_Size; 
+        gl_Position = u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
     }`;
 
 var FSHADER_SOURCE = `
@@ -43,6 +43,7 @@ var gl;
 var a_Position;
 var u_FragColor;
 var u_Size;
+var u_ModelMatrix;
 
 // Functions from 1.3a
 function setupWebGL(){
@@ -79,9 +80,21 @@ function connectVariablesToGLSL(){
         return;
     }
     // Get the storage location of u_Size
-    u_Size = gl.getUniformLocation(gl.program, 'u_Size');
-    if (!u_Size){
-        console.log('Failed to get the storage location of u_Size');
+    // u_Size = gl.getUniformLocation(gl.program, 'u_Size');
+    // if (!u_Size){
+    //     console.log('Failed to get the storage location of u_Size');
+    //     return;
+    // }
+    // Get the storage location of u_ModelMatrix
+    u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+    if (!u_ModelMatrix){
+        console.log('Failed to get the storage location of u_ModelMatrix');
+        return;
+    }
+    // Hook up GlobalRotateMatrix
+    u_GlobalRotateMatrix = gl.getUniformLocation(gl.program, 'u_GlobalRotateMatrix');
+    if (!u_GlobalRotateMatrix){
+        console.log('Failed to get the storage location of u_GlobalRotateMatrix');
         return;
     }
 
@@ -104,6 +117,7 @@ var g_selectedColor = [1.0, 1.0, 1.0, 1.0];
 var g_selectedSize = 10;
 var g_selectedType = POINT;
 var g_segments = 6;
+var g_globalAngle = 0;
 
 function addActionsForHtmlUI(){
     // Button Events
@@ -136,6 +150,10 @@ function addActionsForHtmlUI(){
     // Circle Segment Slider
     var segmentSlide = document.getElementById('segmentSlide');
     segmentSlide.addEventListener('mouseup', function(){g_segments = this.value});
+
+    // Angle Slider
+    var angleSlide = document.getElementById('angleSlide');
+    angleSlide.addEventListener('input', function(){g_globalAngle = this.value; renderAllShapes(); });
 }
 
 function sendPerformanceStatsToHTML(text, id){
@@ -154,14 +172,14 @@ function main() {
     addActionsForHtmlUI();
 
     // Specify color for clearing <canvas>
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(0.07, 0.07, 0.07, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.disable(gl.DEPTH_TEST); // FIX: To fix the glitching black renders
 
     canvas.onmousedown = click;
     canvas.onmousemove = function(ev){ if (ev.buttons == 1){ click(ev); } };
 
-    // Test draw for Triangle3D: Working
-    // drawTriangle3D( [-1.0,0.0,0.0, -0.5,1.0,0.0, 0.0,0.0,0.0] );
+    renderAllShapes();
 }
 
 // var g_points = [];
@@ -203,17 +221,26 @@ function createAndStorePoint([x, y]){
 
 function renderAllShapes(){
     let startTime = performance.now();
+    
+    // Pass the matrix to the u_ModelMatrix
+    var globalRotMax=new Matrix4().rotate(g_globalAngle, 0, 1, 0);
+    gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMax.elements);
+
     // Clear <canvas>
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // Draw all points
-    let len = g_shapesList.length;
-    for (let i = 0; i < len; i++){
-        g_shapesList[i].render();
-    }
+
+
+    // Test Cube
+    var body = new Cube();
+    body.color = [1.0, 0.0, 0.0, 1.0];
+    body.matrix.setTranslate(-0.25, -0.5, 0.0);
+    body.matrix.scale(0.5, 1, 0.5);
+    body.render();
+    console.log('body is being rendered!');
 
     let duration = performance.now() - startTime;
-    sendPerformanceStatsToHTML("selected type:" + g_selectedType + "numdot: " + len + " | ms: " + Math.floor(duration) + " | fps: " + Math.floor(10000/duration)/10, "numdot");
+    sendPerformanceStatsToHTML("selected type:" + g_selectedType + " | ms: " + Math.floor(duration) + " | fps: " + Math.floor(10000/duration)/10, "numdot");
 }
 
 
