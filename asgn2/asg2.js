@@ -93,6 +93,7 @@ var g_finAngle = 0;
 var g_footAngle = 0;
 var g_neckAngle = 0;
 var g_torsoAngle = 0;
+var g_beakAngle = 0;
 
 function addActionsForHtmlUI(){
     // Button Events
@@ -103,7 +104,7 @@ function addActionsForHtmlUI(){
 
     // Angle Slider
     var angleSlide = document.getElementById('angleSlide');
-    angleSlide.addEventListener('input', function(){g_globalAngle = this.value; renderAllShapes(); });
+    angleSlide.addEventListener('input', function(){g_globalAngle = this.value-180; renderAllShapes(); });
 
     // Fin Slider
     var finSlide = document.getElementById('finSlide');
@@ -119,7 +120,11 @@ function addActionsForHtmlUI(){
 
     // Torso Slider
     var torsoSlide = document.getElementById('torsoSlide');
-    torsoSlide.addEventListener('input', function() { g_torsoAngle = this.value; renderAllShapes(); }); 
+    torsoSlide.addEventListener('input', function() { g_torsoAngle = this.value; renderAllShapes(); });
+
+    // Beak Slider
+    var beakSlide = document.getElementById('beakSlide');
+    beakSlide.addEventListener('input', function() { g_beakAngle = this.value; renderAllShapes(); });
 }
 
 function sendPerformanceStatsToHTML(text, id){
@@ -155,13 +160,30 @@ function convertCoordinatesToGLSL(event){
     return([x, y]);
 }
 
+// helper: createChildMatrixOfParent()
+// -> will make child of cloned matrix as parent
+function createChildMatrixOfParent(matrixToClone, scaleX, scaleY, scaleZ){
+    newMatrix = new Matrix4();
+    newMatrix.set(matrixToClone);
+    newMatrix.scale(1/scaleX, 1/scaleY, 1/scaleZ);
+    return newMatrix;
+}
+
+// helper: rotateLocalCenter()
+// -> will make rotations easy
+function rotateLocalCenter(matrix, angle, cx, cy, cz){
+    matrix.translate(cx, cy, cz);
+    matrix.rotate(angle, 1, 0, 0);
+    matrix.translate(-cx, -cy, -cz);
+}
+
 green = [0.0, 1.0, 0.0, 1.0];
 
 function renderAllShapes(){
     let startTime = performance.now();
 
     // Pass the matrix to the u_ModelMatrix
-    var globalRotMax=new Matrix4().rotate(g_globalAngle, 0, 1, 0);
+    var globalRotMax=new Matrix4().rotate(-g_globalAngle, 0, 1, 0);
     gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMax.elements);
 
 
@@ -180,20 +202,19 @@ function renderAllShapes(){
     
     bodyMatrix.setTranslate(-.25, -.5, -.25);
     bodyMatrix.translate(bodyx/2, bodyy/2, bodyz/2);
-    bodyMatrix.rotate(g_torsoAngle, 0, 1, 0);
+    bodyMatrix.rotate(g_torsoAngle, 1, -1, 0);
     bodyMatrix.translate(-bodyx/2, -bodyy/2, -bodyz/2);
     bodyMatrix.scale(bodyx, bodyy, bodyz); // Scale happens first (?) according to 2.2
-    
-    
     drawCube(bodyMatrix, bodyColor);
 
     // Head Cube
     var hlc = 0.3/2; // head local center
-    var hlc_y = 0.1;
-    var headMatrix = new Matrix4(bodyMatrix);
+    var hlc_y = 0.15;
+    var headMatrix = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
+    
     headColor = bodyColor;
     // headColor = green;
-    headMatrix.setTranslate(-0.3/2, 0.5, -0.2-0.3/2);
+    headMatrix.translate(-0.3/2+0.5/2, 1, -0.3/2);
     headMatrix.translate(hlc, hlc_y, hlc);
     headMatrix.rotate(-g_neckAngle, 1, 0, 0);
     headMatrix.translate(-hlc, -hlc_y, -hlc);
@@ -201,48 +222,71 @@ function renderAllShapes(){
     drawCube(headMatrix, headColor);
 
     // Right fin
-    var rfin_mx = new Matrix4();
+    var rfin_mx = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
     fin_color = bodyColor;
     // fin_color = [0.2, .5, 1.0, 1.0];
-    rfin_mx.setTranslate(0.25, (-.8+.1)/2 + 0.8, 0.25/2);
+    rfin_mx.translate(0.5, 0.9, 0.25);
+    rfin_mx.rotate(g_finAngle, 0, 0, 1);
     rfin_mx.rotate(180, 1, 0, 0);
-    rfin_mx.rotate(-g_finAngle, 0, 0, 1);
     rfin_mx.scale(0.1, 0.8, 0.25);
     drawCube(rfin_mx, fin_color);
 
     // Left fin
-    var lfin_mx = new Matrix4(bodyMatrix);
-    lfin_mx.setTranslate(-0.25, (-.8+.1)/2 + 0.8, -0.25/2);
-    lfin_mx.rotate(180, 0, 0, 1);
+    var lfin_mx = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
+    lfin_mx.translate(0, 0.9, 0.25);
     lfin_mx.rotate(-g_finAngle, 0, 0, 1);
+    lfin_mx.rotate(180, 0, 0, 1);
     lfin_mx.scale(0.1, 0.8, 0.25);
     drawCube(lfin_mx, fin_color);
 
     // Foot Config
-    var flc_x = 0.2/2; // Foot local center x
-    var flc_y = 0.1/2; 
-    var flc_z = 0.3/2 + 0.1;
-    footColor = [1, 0.6, 0, 1.0];
+    var flc_x = 0.2; // Foot local center x
+    var flc_y = 0.1; 
+    var flc_z = 0.3;
+    orange = [1, 0.6, 0, 1.0];
 
     // Right foot
-    var rfoot = new Matrix4(bodyMatrix);
-    rfoot.setTranslate(0.15/2, -1.0/2-0.2/2, -0.3*1.5);
-    rfoot.translate(flc_x, flc_y, flc_z);
-    rfoot.rotate(g_footAngle, 1, 0, 0);
-    rfoot.translate(-flc_x, -flc_y, -flc_z);
+    var rfoot = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
+    rfoot.translate(0.3+0.1/2, -0.2/2, -0.3/2);
+    rotateLocalCenter(rfoot, g_footAngle, flc_x/2, flc_y/2, flc_z/2)
     rfoot.scale(0.2, 0.1, 0.3); // first
     
     // Left Foot
-    var lfoot = new Matrix4(bodyMatrix);
-    lfoot.setTranslate(-.15/2-0.2, -1.0/2-0.2/2, -0.3*1.5);
-    lfoot.translate(flc_x, flc_y, flc_z);
-    lfoot.rotate(-g_footAngle, 1, 0, 0);
-    lfoot.translate(-flc_x, -flc_y, -flc_z);
+    var lfoot = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
+    lfoot.translate(-.1/2, -0.2/2, -0.3/2);
+    rotateLocalCenter(lfoot, -g_footAngle, flc_x/2, flc_y/2, flc_z/2)
     lfoot.scale(0.2, 0.1, 0.3);
     
-    
-    drawCube(rfoot, footColor);
-    drawCube(lfoot, footColor);
+    drawCube(rfoot, orange);
+    drawCube(lfoot, orange);
+
+    // Belly (static part)
+    var belly = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
+    var bellyColor = [0.9, 0.9, 0.9, 1.0];
+    belly.translate(0.2/2, 0, -.01/2);
+    belly.scale(0.3, 0.9, 0.01);
+    drawCube(belly, bellyColor);
+
+    // Upper beak
+    var beakx = 0.1;
+    var beaky = 0.1/4;
+    var beakz = 0.1;
+
+    var upperBeak = createChildMatrixOfParent(headMatrix, 0.3, 0.3, 0.3);
+    upperBeak.translate(0.1, 0.05, -0.1);
+    rotateLocalCenter(upperBeak, g_beakAngle, beakx/2, beaky/2, beakz);
+    upperBeak.scale(beakx, beaky, beakz);
+    drawCube(upperBeak, orange);
+
+    // Lower Beak
+    var lowerBeak = createChildMatrixOfParent(headMatrix, 0.3, 0.3, 0.3);
+    lowerBeak.translate(0.1, 0.05-beaky/2, -0.1);
+    rotateLocalCenter(lowerBeak, -g_beakAngle, beakx/2, beaky/2, beakz);
+    lowerBeak.scale(beakx, beaky, beakz);
+    drawCube(lowerBeak, orange);
+
+    // Left eye
+    var leftEye = createChildMatrixOfParent(headMatrix, 0.3, 0.3, 0.3);
 
 
     let duration = performance.now() - startTime;
