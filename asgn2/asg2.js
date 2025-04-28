@@ -44,7 +44,7 @@ function setupWebGL(){
 
     // Specify color for clearing <canvas>
     const clear_num = 0.7;
-    gl.clearColor(clear_num, clear_num, clear_num, 1.0);
+    gl.clearColor(0.3, 0.6, 1.0, 1.0);
     // Clear the color and depth buffers
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     // gl.clear(gl.COLOR_BUFFER_BIT);
@@ -178,6 +178,8 @@ function rotateLocalCenter(matrix, angle, cx, cy, cz){
 }
 
 green = [0.0, 1.0, 0.0, 1.0];
+lightwhite = [0.9, 0.9, 0.9, 1.0];
+black = [0.08, 0.08, 0.08, 1.0];
 
 function renderAllShapes(){
     let startTime = performance.now();
@@ -248,13 +250,13 @@ function renderAllShapes(){
     // Right foot
     var rfoot = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
     rfoot.translate(0.3+0.1/2, -0.2/2, -0.3/2);
-    rotateLocalCenter(rfoot, g_footAngle, flc_x/2, flc_y/2, flc_z/2)
+    rotateLocalCenter(rfoot, g_footAngle, flc_x/2, flc_y/2, flc_z*.8)
     rfoot.scale(0.2, 0.1, 0.3); // first
     
     // Left Foot
     var lfoot = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
     lfoot.translate(-.1/2, -0.2/2, -0.3/2);
-    rotateLocalCenter(lfoot, -g_footAngle, flc_x/2, flc_y/2, flc_z/2)
+    rotateLocalCenter(lfoot, -g_footAngle, flc_x/2, flc_y/2, flc_z*.8)
     lfoot.scale(0.2, 0.1, 0.3);
     
     drawCube(rfoot, orange);
@@ -285,9 +287,31 @@ function renderAllShapes(){
     lowerBeak.scale(beakx, beaky, beakz);
     drawCube(lowerBeak, orange);
 
-    // Left eye
-    var leftEye = createChildMatrixOfParent(headMatrix, 0.3, 0.3, 0.3);
+    // Eyes
+    var eyex = 0.08
+    var eyey = eyex;
+    var eyez = 0.01;
 
+    var leftEye = createChildMatrixOfParent(headMatrix, 0.3, 0.3, 0.3);
+    leftEye.translate(0.1/4, 0.06+eyey, -eyez/2);
+    leftEye.scale(eyex, eyey, eyez);
+    
+    var rightEye = createChildMatrixOfParent(headMatrix, 0.3, 0.3, 0.3);
+    rightEye.translate(0.1/4+eyex*2, 0.06+eyey, -eyez/2);
+    rightEye.scale(eyex, eyey, eyez);
+
+    drawCube(leftEye, lightwhite);
+    drawCube(rightEye, lightwhite);
+
+    var leftPupil = createChildMatrixOfParent(leftEye, eyex, eyey, eyez);
+    leftPupil.translate(eyex*.35, 0, -eyez*.5);
+    leftPupil.scale(eyex*.5, eyey*.8, eyez*.5);
+    drawCube(leftPupil, black);
+
+    var rightPupil = createChildMatrixOfParent(rightEye, eyex, eyey, eyez);
+    rightPupil.translate(eyex*0.17, 0, -eyez*.5);
+    rightPupil.scale(eyex*.5, eyey*.8, eyez*.5);
+    drawCube(rightPupil, black);
 
     let duration = performance.now() - startTime;
     sendPerformanceStatsToHTML("ping (ms): " + Math.floor(duration) + " | fps: " + Math.floor(10000/duration)/10, "numdot");
@@ -298,4 +322,17 @@ function drawCube(M, targetColor){
     cube.color = targetColor;
     cube.matrix = M;
     cube.render();
+}
+
+var g_startTime = performance.now()/1000.0;
+var g_seconds = performance.now()/1000.0 - g_startTime;
+
+function tick(){
+    // global tick variable update
+    g_seconds=performance.now()/1000.0 - g_startTime;
+    console.log(g_seconds);
+
+    renderAllShapes();
+
+    requestAnimationFrame(tick);
 }
