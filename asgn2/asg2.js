@@ -269,14 +269,15 @@ function renderAllShapes(){
 
     // Right foot
     var rfoot = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
-    targetAngle = g_animationBoolean ? 45*Math.sin(g_seconds*4) : g_footAngle; 
+    targetAngle = g_animationBoolean ? 45*Math.sin(g_seconds*10/3) : g_footAngle; 
     rfoot.translate(0.3+0.1/2, -0.2/2, -0.3/2);
     rotateLocalCenter(rfoot, targetAngle, flc_x/2, flc_y/2, flc_z*.8);
     rfoot.scale(0.2, 0.1, 0.3); // first
     
     // Left Foot
     var lfoot = createChildMatrixOfParent(bodyMatrix, bodyx, bodyy, bodyz);
-    targetAngle = g_animationBoolean ? -45*Math.sin(g_seconds*4) : -g_footAngle;
+    // targetAngle = g_animationBoolean ? -45*Math.sin(g_seconds*4) : -g_footAngle;
+    targetAngle = -targetAngle;
     lfoot.translate(-.1/2, -0.2/2, -0.3/2);
     rotateLocalCenter(lfoot, targetAngle, flc_x/2, flc_y/2, flc_z*.8);
     lfoot.scale(0.2, 0.1, 0.3);
@@ -328,13 +329,13 @@ function renderAllShapes(){
     drawCube(rightEye, lightwhite);
 
     var leftPupil = createChildMatrixOfParent(leftEye, eyex, eyey, eyez);
-    var pmd = calculateMouseToPupilDifferential(leftPupil.elements[12], leftPupil.elements[13]); // pmd = pupilMouseDiff
+    var pmd = g_animationBoolean ? calculateMouseToPupilDifferential(leftPupil.elements[12], leftPupil.elements[13]) : {xd:0.1, yd:0.1}; // pmd = pupilMouseDiff
     leftPupil.translate(eyex*.25+pmd.xd*0.02, eyey*0.15+pmd.yd*0.015, -eyez*.5);
     leftPupil.scale(eyex*.5, eyey*.8, eyez*.5);
     drawCube(leftPupil, black);
 
     var rightPupil = createChildMatrixOfParent(rightEye, eyex, eyey, eyez);
-    var pmd = calculateMouseToPupilDifferential(rightPupil.elements[12], rightPupil.elements[13]); // pmd = pupilMouseDiff
+    pmd = g_animationBoolean ? calculateMouseToPupilDifferential(rightPupil.elements[12], rightPupil.elements[13]) : {xd:0.1, yd:0.1}; // pmd = pupilMouseDiff
     rightPupil.translate(eyex*0.25+pmd.xd*0.02, eyey*0.15+pmd.yd*0.015, -eyez*.5);
     rightPupil.scale(eyex*.5, eyey*.8, eyez*.5);
     drawCube(rightPupil, black);
