@@ -42,8 +42,9 @@ var canvas;
 var gl;
 var a_Position;
 var u_FragColor;
-var u_Size;
 var u_ModelMatrix;
+
+
 
 // Functions from 1.3a
 function setupWebGL(){
@@ -53,17 +54,24 @@ function setupWebGL(){
         console.log('Failed to retrieve the <canvas> element');
         return;
     }
-    
+
     // Get the rendering context for WebGL
     // gl = getWebGLContext(canvas);
     gl = canvas.getContext('webgl', {preserveDrawingBuffer: true});
-    gl.enable(gl.DEPTH_TEST); // Asgn2 requirement for 3D
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
     if (!gl){
         console.log('Failed to return the rendering context for WebGL');
         return;
     }
+
+    gl.enable(gl.DEPTH_TEST); // TODO: Fix black renders, recommended set to enable (Asgn2 requirement)
+    // gl.disable(gl.CULL_FACE);
+
+    // Specify color for clearing <canvas>
+    const clear_num = 0.7;
+    gl.clearColor(clear_num, clear_num, clear_num, 1.0);
+    // Clear the color and depth buffers
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // gl.clear(gl.COLOR_BUFFER_BIT);
 }
 
 function connectVariablesToGLSL(){
@@ -79,12 +87,6 @@ function connectVariablesToGLSL(){
         console.log('Failed to get the storage location of a_Position');
         return;
     }
-    // Get the storage location of u_Size
-    // u_Size = gl.getUniformLocation(gl.program, 'u_Size');
-    // if (!u_Size){
-    //     console.log('Failed to get the storage location of u_Size');
-    //     return;
-    // }
     // Get the storage location of u_ModelMatrix
     u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
     if (!u_ModelMatrix){
@@ -106,51 +108,24 @@ function connectVariablesToGLSL(){
     }
 }
 
-// Constants
-const POINT = 0;
-const TRIANGLE = 1;
-const CIRCLE = 2;
-const CUBE = 3;
 
 // Globals related to UI Elements
 var g_selectedColor = [1.0, 1.0, 1.0, 1.0];
-var g_selectedSize = 10;
-var g_selectedType = POINT;
 var g_segments = 6;
 var g_globalAngle = 0;
 
+
+
 function addActionsForHtmlUI(){
     // Button Events
-    document.getElementById('green').onclick = function(){g_selectedColor = [0.0, 1.0, 0.0, 1.0]};
-    document.getElementById('red').onclick = function(){g_selectedColor = [1.0, 0.0, 0.0, 1.0]};
+    // document.getElementById('green').onclick = function(){g_selectedColor = [0.0, 1.0, 0.0, 1.0]};
+    // document.getElementById('red').onclick = function(){g_selectedColor = [1.0, 0.0, 0.0, 1.0]};
     document.getElementById('clearButton').onclick = function(){
         g_shapesList = [];
         gl.clear(gl.COLOR_BUFFER_BIT);
     };
 
-    // Button Shape Events
-    document.getElementById('pointButton').onclick = function(){g_selectedType=POINT};
-    document.getElementById('triangleButton').onclick = function(){g_selectedType=TRIANGLE};
-    document.getElementById('circleButton').onclick = function(){g_selectedType=CIRCLE};
-    document.getElementById('cubeButton').onClkick = function(){g_selectedType=CUBE};
-
-    // Slider Events
-    var redSlide = document.getElementById('redSlide');
-    redSlide.addEventListener('mouseup', function(){ g_selectedColor[0] = redSlide.value/255.0});
-
-    var greenSlide = document.getElementById('greenSlide');
-    greenSlide.addEventListener('mouseup', function(){ g_selectedColor[1] = greenSlide.value/255.0});
-
-    var blueSlide = document.getElementById('blueSlide');
-    blueSlide.addEventListener('mouseup', function(){ g_selectedColor[2] = blueSlide.value/255.0});
-
-    var sizeSlide = document.getElementById('sizeSlide');
-    sizeSlide.addEventListener('mouseup', function(){g_selectedSize = this.value});
-
-    // Circle Segment Slider
-    var segmentSlide = document.getElementById('segmentSlide');
-    segmentSlide.addEventListener('mouseup', function(){g_segments = this.value});
-
+    
     // Angle Slider
     var angleSlide = document.getElementById('angleSlide');
     angleSlide.addEventListener('input', function(){g_globalAngle = this.value; renderAllShapes(); });
@@ -170,11 +145,6 @@ function main() {
     setupWebGL();
     connectVariablesToGLSL();
     addActionsForHtmlUI();
-
-    // Specify color for clearing <canvas>
-    gl.clearColor(0.07, 0.07, 0.07, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.disable(gl.DEPTH_TEST); // FIX: To fix the glitching black renders
 
     canvas.onmousedown = click;
     canvas.onmousemove = function(ev){ if (ev.buttons == 1){ click(ev); } };
@@ -198,57 +168,104 @@ function convertCoordinatesToGLSL(event){
     return([x, y]);
 }
 
-function createAndStorePoint([x, y]){
-    let point;
-    if (g_selectedType == POINT){ point = new Point() }
-    else if (g_selectedType == TRIANGLE){ point = new Triangle() }
-    else if (g_selectedType == CIRCLE){ 
-        point = new Circle();
-        point.segments=g_segments;
-    }
-    else if (g_selectedType == CUBE){
-        cube = new Cube();
-        cube.color = [1.0, 0.0, 1.0, 1.0];
-        cube.render();
-        // g_shapesList.push(cube);
-    }
-
-    point.position=[x, y];
-    point.color=g_selectedColor.slice();
-    point.size=g_selectedSize;
-    g_shapesList.push(point);
-}
 
 function renderAllShapes(){
     let startTime = performance.now();
-    
+
     // Pass the matrix to the u_ModelMatrix
     var globalRotMax=new Matrix4().rotate(g_globalAngle, 0, 1, 0);
     gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMax.elements);
 
+
     // Clear <canvas>
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    // Penguin Builder
+    // Body Cube
+    var bodyMatrix = new Matrix4();
+    bodyColor = [0.2, 0.2, 0.2, 1.0];
+    
+    bodyMatrix.setTranslate(-.25, -.5, -.25);
+    bodyMatrix.scale(.5, 1, .5); // Scale happens first (?) according to 2.2
+    // bodyMatrix.rotate(5, 1, 1, 1);
+    drawCube(bodyMatrix, bodyColor);
 
+    // Head Cube
+    var headMatrix = new Matrix4();
+    headColor = [0.2, 0.2, 0.2, 1.0];
+    headMatrix.setTranslate(-0.3/2, bodyMatrix.elements[1*4 + 1]/2, -0.3); // get the head y axis position, elements is 4x4
+    headMatrix.scale(0.3, 0.3, 0.3);
+    drawCube(headMatrix, headColor);
 
-    // Test Cube
-    var body = new Cube();
-    body.color = [1.0, 0.0, 0.0, 1.0];
-    body.matrix.setTranslate(-0.25, -0.5, 0.0);
-    body.matrix.scale(0.5, 1, 0.5);
-    body.render();
-    console.log('body is being rendered!');
+    // Right fin
+    
+   
 
     let duration = performance.now() - startTime;
     sendPerformanceStatsToHTML("selected type:" + g_selectedType + " | ms: " + Math.floor(duration) + " | fps: " + Math.floor(10000/duration)/10, "numdot");
 }
 
+function drawCube(M, targetColor){
+    var cube = new Cube();
+    cube.color = targetColor;
+    cube.matrix = M;
+    cube.render();
+}
 
 
-function click(event){
-    [x, y] = convertCoordinatesToGLSL(event);
+// asgn1 
+// function click(event){
+//     [x, y] = convertCoordinatesToGLSL(event);
 
-    createAndStorePoint([x, y]);
+//     createAndStorePoint([x, y]);
 
-    renderAllShapes(); 
-};
+//     renderAllShapes(); 
+// };
+
+
+
+// Button Shape Events
+    // document.getElementById('pointButton').onclick = function(){g_selectedType=POINT};
+    // document.getElementById('triangleButton').onclick = function(){g_selectedType=TRIANGLE};
+    // document.getElementById('circleButton').onclick = function(){g_selectedType=CIRCLE};
+    // document.getElementById('cubeButton').onClick = function(){g_selectedType=CUBE};
+
+    // Slider Events
+    // var redSlide = document.getElementById('redSlide');
+    // redSlide.addEventListener('mouseup', function(){ g_selectedColor[0] = redSlide.value/255.0});
+
+    // var greenSlide = document.getElementById('greenSlide');
+    // greenSlide.addEventListener('mouseup', function(){ g_selectedColor[1] = greenSlide.value/255.0});
+
+    // var blueSlide = document.getElementById('blueSlide');
+    // blueSlide.addEventListener('mouseup', function(){ g_selectedColor[2] = blueSlide.value/255.0});
+
+    // var sizeSlide = document.getElementById('sizeSlide');
+    // sizeSlide.addEventListener('mouseup', function(){g_selectedSize = this.value});
+
+    // // Circle Segment Slider
+    // var segmentSlide = document.getElementById('segmentSlide');
+    // segmentSlide.addEventListener('mouseup', function(){g_segments = this.value});
+
+
+// function createAndStorePoint([x, y]){
+//     let point;
+//     if (g_selectedType == POINT){ point = new Point() }
+//     else if (g_selectedType == TRIANGLE){ point = new Triangle() }
+//     else if (g_selectedType == CIRCLE){ 
+//         point = new Circle();
+//         point.segments=g_segments;
+//     }
+//     else if (g_selectedType == CUBE){
+//         cube = new Cube();
+//         cube.color = [1.0, 0.0, 1.0, 1.0];
+//         cube.render();
+//         // g_shapesList.push(cube);
+//     }
+
+//     point.position=[x, y];
+//     point.color=g_selectedColor.slice();
+//     point.size=g_selectedSize;
+//     g_shapesList.push(point);
+// }
