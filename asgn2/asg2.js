@@ -329,13 +329,13 @@ function renderAllShapes(){
     drawCube(rightEye, lightwhite);
 
     var leftPupil = createChildMatrixOfParent(leftEye, eyex, eyey, eyez);
-    var pmd = g_animationBoolean ? calculateMouseToPupilDifferential(leftPupil.elements[12], leftPupil.elements[13]) : {xd:0.1, yd:0.1}; // pmd = pupilMouseDiff
+    var pmd = g_animationBoolean ? calculateMouseToPupilDifferential(leftPupil.elements[12], leftPupil.elements[13]) : {xd:0.1, yd:-.9}; // pmd = pupilMouseDiff
     leftPupil.translate(eyex*.25+pmd.xd*0.02, eyey*0.15+pmd.yd*0.015, -eyez*.5);
     leftPupil.scale(eyex*.5, eyey*.8, eyez*.5);
     drawCube(leftPupil, black);
 
     var rightPupil = createChildMatrixOfParent(rightEye, eyex, eyey, eyez);
-    pmd = g_animationBoolean ? calculateMouseToPupilDifferential(rightPupil.elements[12], rightPupil.elements[13]) : {xd:0.1, yd:0.1}; // pmd = pupilMouseDiff
+    pmd = g_animationBoolean ? calculateMouseToPupilDifferential(rightPupil.elements[12], rightPupil.elements[13]) : {xd:0.1, yd:-.9}; // pmd = pupilMouseDiff
     rightPupil.translate(eyex*0.25+pmd.xd*0.02, eyey*0.15+pmd.yd*0.015, -eyez*.5);
     rightPupil.scale(eyex*.5, eyey*.8, eyez*.5);
     drawCube(rightPupil, black);
