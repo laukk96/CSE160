@@ -90,6 +90,7 @@ var g_selectedColor = [1.0, 1.0, 1.0, 1.0];
 var g_segments = 6;
 var g_globalAngle = 0;
 var g_finAngle = 0;
+var g_footAngle = 0;
 
 function addActionsForHtmlUI(){
     // Button Events
@@ -105,6 +106,11 @@ function addActionsForHtmlUI(){
     // Fin Slider
     var finSlide = document.getElementById('finSlide');
     finSlide.addEventListener('input', function(){g_finAngle = this.value; renderAllShapes(); });
+
+    // Foot Slider (New)
+    var footSlide = document.getElementById('footSlide'); // Get the new slider element by its ID
+    footSlide.addEventListener('input', function(){ g_footAngle = this.value; renderAllShapes(); }); // Update g_footAngle and re-render
+
 }
 
 function sendPerformanceStatsToHTML(text, id){
@@ -176,11 +182,35 @@ function renderAllShapes(){
 
     // Right fin
     var rfin_mx = new Matrix4();
-    // fin_color = bodyColor;
-    fin_color = [0.2, .5, 1.0, 1.0];
-    rfin_mx.setTranslate(0.25, (-.8+.1)/2, -0.25/2);
+    fin_color = bodyColor;
+    // fin_color = [0.2, .5, 1.0, 1.0];
+    rfin_mx.setTranslate(0.25, (-.8+.1)/2 + 0.8, 0.25/2);
+    rfin_mx.rotate(180, 1, 0, 0);
+    rfin_mx.rotate(-g_finAngle, 0, 0, 1);
     rfin_mx.scale(0.1, 0.8, 0.25);
     drawCube(rfin_mx, fin_color);
+
+    // Left fin
+    var lfin_mx = new Matrix4();
+    lfin_mx.setTranslate(-0.25, (-.8+.1)/2 + 0.8, -0.25/2);
+    lfin_mx.rotate(180, 0, 0, 1);
+    lfin_mx.rotate(-g_finAngle, 0, 0, 1);
+    lfin_mx.scale(0.1, 0.8, 0.25);
+    drawCube(lfin_mx, fin_color);
+
+    // Right foot
+    var rfoot = new Matrix4();
+    var lfoot = new Matrix4();
+    footColor = [1, 0.6, 0, 1.0];
+    rfoot.setTranslate(0.15/2, -1.0/2-0.2/2, -0.3*1.5);
+    rfoot.scale(0.2, 0.1, 0.3);
+    
+    lfoot.setTranslate(-.15/2-0.2, -1.0/2-0.2/2, -0.3*1.5);
+    lfoot.scale(0.2, 0.1, 0.3);
+
+    drawCube(rfoot, footColor);
+    drawCube(lfoot, footColor);
+
 
     let duration = performance.now() - startTime;
     sendPerformanceStatsToHTML("ping (ms): " + Math.floor(duration) + " | fps: " + Math.floor(10000/duration)/10, "numdot");
@@ -192,60 +222,3 @@ function drawCube(M, targetColor){
     cube.matrix = M;
     cube.render();
 }
-
-
-// asgn1 
-// function click(event){
-//     [x, y] = convertCoordinatesToGLSL(event);
-
-//     createAndStorePoint([x, y]);
-
-//     renderAllShapes(); 
-// };
-
-
-
-// Button Shape Events
-    // document.getElementById('pointButton').onclick = function(){g_selectedType=POINT};
-    // document.getElementById('triangleButton').onclick = function(){g_selectedType=TRIANGLE};
-    // document.getElementById('circleButton').onclick = function(){g_selectedType=CIRCLE};
-    // document.getElementById('cubeButton').onClick = function(){g_selectedType=CUBE};
-
-    // Slider Events
-    // var redSlide = document.getElementById('redSlide');
-    // redSlide.addEventListener('mouseup', function(){ g_selectedColor[0] = redSlide.value/255.0});
-
-    // var greenSlide = document.getElementById('greenSlide');
-    // greenSlide.addEventListener('mouseup', function(){ g_selectedColor[1] = greenSlide.value/255.0});
-
-    // var blueSlide = document.getElementById('blueSlide');
-    // blueSlide.addEventListener('mouseup', function(){ g_selectedColor[2] = blueSlide.value/255.0});
-
-    // var sizeSlide = document.getElementById('sizeSlide');
-    // sizeSlide.addEventListener('mouseup', function(){g_selectedSize = this.value});
-
-    // // Circle Segment Slider
-    // var segmentSlide = document.getElementById('segmentSlide');
-    // segmentSlide.addEventListener('mouseup', function(){g_segments = this.value});
-
-
-// function createAndStorePoint([x, y]){
-//     let point;
-//     if (g_selectedType == POINT){ point = new Point() }
-//     else if (g_selectedType == TRIANGLE){ point = new Triangle() }
-//     else if (g_selectedType == CIRCLE){ 
-//         point = new Circle();
-//         point.segments=g_segments;
-//     }
-//     else if (g_selectedType == CUBE){
-//         cube = new Cube();
-//         cube.color = [1.0, 0.0, 1.0, 1.0];
-//         cube.render();
-//         // g_shapesList.push(cube);
-//     }
-
-//     point.position=[x, y];
-//     point.color=g_selectedColor.slice();
-//     point.size=g_selectedSize;
-//     g_shapesList.push(point);
-// }
