@@ -1,6 +1,6 @@
 // cuon-matrix.js (c) 2012 kanda and matsuda
 /** 
- * This is a class treating 4x4 matrix.
+ * This is a maass treating 4x4 matrix.
  * This class contains the function that is equivalent to OpenGL matrix stack.
  * The matrix after conversion is calculated by multiplying a conversion matrix from the right.
  * The matrix is replaced by the calculated result.

@@ -91,6 +91,8 @@ var g_segments = 6;
 var g_globalAngle = 0;
 var g_finAngle = 0;
 var g_footAngle = 0;
+var g_neckAngle = 0;
+var g_torsoAngle = 0;
 
 function addActionsForHtmlUI(){
     // Button Events
@@ -107,10 +109,17 @@ function addActionsForHtmlUI(){
     var finSlide = document.getElementById('finSlide');
     finSlide.addEventListener('input', function(){g_finAngle = this.value; renderAllShapes(); });
 
-    // Foot Slider (New)
+    // Foot Slider
     var footSlide = document.getElementById('footSlide'); // Get the new slider element by its ID
-    footSlide.addEventListener('input', function(){ g_footAngle = this.value; renderAllShapes(); }); // Update g_footAngle and re-render
+    footSlide.addEventListener('input', function(){ g_footAngle = this.value; renderAllShapes(); });
 
+    // Neck Slider
+    var neckSlide = document.getElementById('neckSlide');
+    neckSlide.addEventListener('input', function() { g_neckAngle = this.value; renderAllShapes(); });
+
+    // Torso Slider
+    var torsoSlide = document.getElementById('torsoSlide');
+    torsoSlide.addEventListener('input', function() { g_torsoAngle = this.value; renderAllShapes(); }); 
 }
 
 function sendPerformanceStatsToHTML(text, id){
@@ -134,10 +143,6 @@ function main() {
     renderAllShapes();
 }
 
-// var g_points = [];
-// var g_colors = [];
-// var g_sizes = [];
-var g_shapesList = [];
 
 function convertCoordinatesToGLSL(event){
     let x = event.clientX;
@@ -150,6 +155,7 @@ function convertCoordinatesToGLSL(event){
     return([x, y]);
 }
 
+green = [0.0, 1.0, 0.0, 1.0];
 
 function renderAllShapes(){
     let startTime = performance.now();
@@ -165,19 +171,33 @@ function renderAllShapes(){
 
     // Penguin Builder
     // Body Cube
+
+    var bodyx = 0.5;
+    var bodyy = 1.0;
+    var bodyz = bodyx;
     var bodyMatrix = new Matrix4();
     bodyColor = [0.2, 0.2, 0.2, 1.0];
     
     bodyMatrix.setTranslate(-.25, -.5, -.25);
-    bodyMatrix.scale(.5, 1, .5); // Scale happens first (?) according to 2.2
-    // bodyMatrix.rotate(5, 1, 1, 1);
+    bodyMatrix.translate(bodyx/2, bodyy/2, bodyz/2);
+    bodyMatrix.rotate(g_torsoAngle, 0, 1, 0);
+    bodyMatrix.translate(-bodyx/2, -bodyy/2, -bodyz/2);
+    bodyMatrix.scale(bodyx, bodyy, bodyz); // Scale happens first (?) according to 2.2
+    
+    
     drawCube(bodyMatrix, bodyColor);
 
     // Head Cube
-    var headMatrix = new Matrix4();
+    var hlc = 0.3/2; // head local center
+    var hlc_y = 0.1;
+    var headMatrix = new Matrix4(bodyMatrix);
     headColor = bodyColor;
-    headMatrix.setTranslate(-0.3/2, bodyMatrix.elements[1*4 + 1]/2, -0.3); // get the head y axis position, elements is 4x4
-    headMatrix.scale(0.3, 0.3, 0.3);
+    // headColor = green;
+    headMatrix.setTranslate(-0.3/2, 0.5, -0.2-0.3/2);
+    headMatrix.translate(hlc, hlc_y, hlc);
+    headMatrix.rotate(-g_neckAngle, 1, 0, 0);
+    headMatrix.translate(-hlc, -hlc_y, -hlc);
+    headMatrix.scale(0.3, 0.3, 0.3); 
     drawCube(headMatrix, headColor);
 
     // Right fin
@@ -191,23 +211,36 @@ function renderAllShapes(){
     drawCube(rfin_mx, fin_color);
 
     // Left fin
-    var lfin_mx = new Matrix4();
+    var lfin_mx = new Matrix4(bodyMatrix);
     lfin_mx.setTranslate(-0.25, (-.8+.1)/2 + 0.8, -0.25/2);
     lfin_mx.rotate(180, 0, 0, 1);
     lfin_mx.rotate(-g_finAngle, 0, 0, 1);
     lfin_mx.scale(0.1, 0.8, 0.25);
     drawCube(lfin_mx, fin_color);
 
-    // Right foot
-    var rfoot = new Matrix4();
-    var lfoot = new Matrix4();
+    // Foot Config
+    var flc_x = 0.2/2; // Foot local center x
+    var flc_y = 0.1/2; 
+    var flc_z = 0.3/2 + 0.1;
     footColor = [1, 0.6, 0, 1.0];
-    rfoot.setTranslate(0.15/2, -1.0/2-0.2/2, -0.3*1.5);
-    rfoot.scale(0.2, 0.1, 0.3);
-    
-    lfoot.setTranslate(-.15/2-0.2, -1.0/2-0.2/2, -0.3*1.5);
-    lfoot.scale(0.2, 0.1, 0.3);
 
+    // Right foot
+    var rfoot = new Matrix4(bodyMatrix);
+    rfoot.setTranslate(0.15/2, -1.0/2-0.2/2, -0.3*1.5);
+    rfoot.translate(flc_x, flc_y, flc_z);
+    rfoot.rotate(g_footAngle, 1, 0, 0);
+    rfoot.translate(-flc_x, -flc_y, -flc_z);
+    rfoot.scale(0.2, 0.1, 0.3); // first
+    
+    // Left Foot
+    var lfoot = new Matrix4(bodyMatrix);
+    lfoot.setTranslate(-.15/2-0.2, -1.0/2-0.2/2, -0.3*1.5);
+    lfoot.translate(flc_x, flc_y, flc_z);
+    lfoot.rotate(-g_footAngle, 1, 0, 0);
+    lfoot.translate(-flc_x, -flc_y, -flc_z);
+    lfoot.scale(0.2, 0.1, 0.3);
+    
+    
     drawCube(rfoot, footColor);
     drawCube(lfoot, footColor);
 
