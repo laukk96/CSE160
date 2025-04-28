@@ -1,25 +1,3 @@
-
-// DrawRectangle.js
-
-function angleBetween(v1, v2){
-    var mag1 = v1.magnitude();
-    var mag2 = v2.magnitude();
-    var thedot = Vector3.dot(v1, v2);
-    var theAngle = parseFloat(Math.acos(thedot/(mag1 * mag2)));
-    return theAngle*(180/Math.PI);
-}
-
-function areaTriangle(v1, v2){
-    var v3 = Vector3.cross(v1, v2);
-    var area = v3.magnitude()/2;
-    return area;
-}
-
-
-var g_points = [];
-
-
-// Vertex Shader Program
 var VSHADER_SOURCE = `
     attribute vec4 a_Position;
     uniform mat4 u_ModelMatrix;
@@ -43,8 +21,6 @@ var gl;
 var a_Position;
 var u_FragColor;
 var u_ModelMatrix;
-
-
 
 // Functions from 1.3a
 function setupWebGL(){
@@ -113,22 +89,22 @@ function connectVariablesToGLSL(){
 var g_selectedColor = [1.0, 1.0, 1.0, 1.0];
 var g_segments = 6;
 var g_globalAngle = 0;
-
-
+var g_finAngle = 0;
 
 function addActionsForHtmlUI(){
     // Button Events
-    // document.getElementById('green').onclick = function(){g_selectedColor = [0.0, 1.0, 0.0, 1.0]};
-    // document.getElementById('red').onclick = function(){g_selectedColor = [1.0, 0.0, 0.0, 1.0]};
     document.getElementById('clearButton').onclick = function(){
         g_shapesList = [];
         gl.clear(gl.COLOR_BUFFER_BIT);
     };
 
-    
     // Angle Slider
     var angleSlide = document.getElementById('angleSlide');
     angleSlide.addEventListener('input', function(){g_globalAngle = this.value; renderAllShapes(); });
+
+    // Fin Slider
+    var finSlide = document.getElementById('finSlide');
+    finSlide.addEventListener('input', function(){g_finAngle = this.value; renderAllShapes(); });
 }
 
 function sendPerformanceStatsToHTML(text, id){
@@ -146,8 +122,8 @@ function main() {
     connectVariablesToGLSL();
     addActionsForHtmlUI();
 
-    canvas.onmousedown = click;
-    canvas.onmousemove = function(ev){ if (ev.buttons == 1){ click(ev); } };
+    // canvas.onmousedown = click;
+    // canvas.onmousemove = function(ev){ if (ev.buttons == 1){ click(ev); } };
 
     renderAllShapes();
 }
@@ -193,17 +169,21 @@ function renderAllShapes(){
 
     // Head Cube
     var headMatrix = new Matrix4();
-    headColor = [0.2, 0.2, 0.2, 1.0];
+    headColor = bodyColor;
     headMatrix.setTranslate(-0.3/2, bodyMatrix.elements[1*4 + 1]/2, -0.3); // get the head y axis position, elements is 4x4
     headMatrix.scale(0.3, 0.3, 0.3);
     drawCube(headMatrix, headColor);
 
     // Right fin
-    
-   
+    var rfin_mx = new Matrix4();
+    // fin_color = bodyColor;
+    fin_color = [0.2, .5, 1.0, 1.0];
+    rfin_mx.setTranslate(0.25, (-.8+.1)/2, -0.25/2);
+    rfin_mx.scale(0.1, 0.8, 0.25);
+    drawCube(rfin_mx, fin_color);
 
     let duration = performance.now() - startTime;
-    sendPerformanceStatsToHTML("selected type:" + g_selectedType + " | ms: " + Math.floor(duration) + " | fps: " + Math.floor(10000/duration)/10, "numdot");
+    sendPerformanceStatsToHTML("ping (ms): " + Math.floor(duration) + " | fps: " + Math.floor(10000/duration)/10, "numdot");
 }
 
 function drawCube(M, targetColor){
