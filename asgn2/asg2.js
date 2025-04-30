@@ -191,6 +191,7 @@ function rotateLocalCenter(matrix, angle, cx, cy, cz){
 green = [0.0, 1.0, 0.0, 1.0];
 lightwhite = [0.9, 0.9, 0.9, 1.0];
 black = [0.08, 0.08, 0.08, 1.0];
+white = [1.0, 1.0, 1.0, 1.0];
 
 function renderAllShapes(){
     let startTime = performance.now();
@@ -328,10 +329,15 @@ function renderAllShapes(){
     drawCube(leftEye, lightwhite);
     drawCube(rightEye, lightwhite);
 
+    // Pupils
+    var pupil_sx = eyex*.5;
+    var pupil_sy = eyey*.8
+    var pupil_sz = eyez*.5
+
     var leftPupil = createChildMatrixOfParent(leftEye, eyex, eyey, eyez);
     var pmd = g_animationBoolean ? calculateMouseToPupilDifferential(leftPupil.elements[12], leftPupil.elements[13]) : {xd:0.1, yd:-.9}; // pmd = pupilMouseDiff
     leftPupil.translate(eyex*.25+pmd.xd*0.02, eyey*0.15+pmd.yd*0.015, -eyez*.5);
-    leftPupil.scale(eyex*.5, eyey*.8, eyez*.5);
+    leftPupil.scale(pupil_sx, pupil_sy, pupil_sz);
     drawCube(leftPupil, black);
 
     var rightPupil = createChildMatrixOfParent(rightEye, eyex, eyey, eyez);
@@ -339,6 +345,17 @@ function renderAllShapes(){
     rightPupil.translate(eyex*0.25+pmd.xd*0.02, eyey*0.15+pmd.yd*0.015, -eyez*.5);
     rightPupil.scale(eyex*.5, eyey*.8, eyez*.5);
     drawCube(rightPupil, black);
+
+    // Eye Shine
+    var leftEyeShine = createChildMatrixOfParent(leftPupil, pupil_sx, pupil_sy, pupil_sz);
+    leftEyeShine.translate(0.025, eyey*0.55, -eyez*.5);
+    leftEyeShine.scale(pupil_sx*.25, pupil_sy*.25, pupil_sz*0.25);
+    drawCube(leftEyeShine, lightwhite);
+
+    var rightEyeShine = createChildMatrixOfParent(rightPupil, pupil_sx, pupil_sy, pupil_sz);
+    rightEyeShine.translate(0.025, eyey*0.55, -eyez*.5);
+    rightEyeShine.scale(pupil_sx*.25, pupil_sy*.25, pupil_sz*0.25);
+    drawCube(rightEyeShine, lightwhite);
 
     // console.log("rightPupil coords:" + rightPupil.elements[12], rightPupil.elements[13], rightPupil.elements[14] + "\nmouseCoords: " + g_mouseCoords.x + ", " + g_mouseCoords.y);
 
