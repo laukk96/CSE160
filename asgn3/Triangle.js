@@ -74,53 +74,48 @@ function drawTriangle3D(vertices){
     gl.drawArrays(gl.TRIANGLES, 0, n);
  }
 
-//  function drawTriangle3DUV(vertices, uv){
-//     var n = 3;
+function drawTriangle3DUV(vertices, uv){
+    var n = 3;
 
-//     var vertexBuffer = gl.createBuffer();
-//     if(!vertexBuffer){
-//        console.log('Failed to create the buffer object');
-//        return -1;
-//     }
+    var vertexBuffer = gl.createBuffer();
+    if(!vertexBuffer){
+       console.log('Failed to create the buffer object');
+       return -1;
+    }
  
-//     // Bind the buffer object to target
-//     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    // Bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     
-//     // Write date into the buffer object
-//     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+    // Write date into the buffer object
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
  
-//     // Assign the buffer object to a_Position variable
-//     // NOTE: We only changed the parameter 2 -> 3. 
-//     // This changes the number of things we pass through the function
-//     gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+    // Assign the buffer object to a_Position variable
+    // NOTE: We only changed the parameter 2 -> 3. 
+    // This changes the number of things we pass through the function
+    gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
  
-//     // Enable the assignment to a_Position variable
-//     gl.enableVertexAttribArray(a_Position);
+    // Enable the assignment to a_Position variable
+    gl.enableVertexAttribArray(a_Position);
 
-//     // ---------
-//     // create a buffer object for UV
-//     var uvBuffer = gl.createBuffer();
-//     if (!uvBuffer){
-//         console.log('Failed to create the buffer object for UV');
-//         return -1;
-//     }
+    // ---------
+    // create a buffer object for UV
+    var uvBuffer = gl.createBuffer();
+    if (!uvBuffer){
+        console.log('Failed to create the buffer object for UV');
+        return -1;
+    }
 
-//     // bind the buffer object to target
-//     gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+    // bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
     
-//     // write the data into the buffer
-//     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.DYNAMIC_DRAW);
+    // write the data into the buffer
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.DYNAMIC_DRAW);
 
-//     // assign to a_Position attribute variable
-//     gl.vertexAttribPointer(a_UV, 2, gl.FLOAT, false, 0, 0);
+    // assign to a_Position attribute variable
+    gl.vertexAttribPointer(a_UV, 2, gl.FLOAT, false, 0, 0);
 
-//     // enable the assignment to a_UV variable
-//     gl.enableVertexAttribArray(a_UV);
+    // enable the assignment to a_UV variable
+    gl.enableVertexAttribArray(a_UV);
 
-
-//     // Summary:
-//     // set up both buffers
-//     // draw arrays
-
-//     gl.drawArrays(gl.TRIANGLES, 0, n);
-//  }
+    gl.drawArrays(gl.TRIANGLES, 0, n);
+ }
