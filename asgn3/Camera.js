@@ -12,10 +12,11 @@ class Camera {
       0.1,
       1000
     );
-    this.speed = 1;
+    this.speed = 0.1;
     this.updateViewMatrix();
   }
   updateViewMatrix() {
+    console.log("update:", this.eye, this.at, this.up);
     this.viewMatrix.setLookAt(
       this.eye.elements[0],
       this.eye.elements[1],
@@ -31,47 +32,58 @@ class Camera {
     );
   }
   moveForward() {
-    let f = new Vector3().set(this.at); // normalized vector for lookVector
-    f.sub(this.eye);
+    console.log("moveForward:", this.eye, this.at, this.up);
+    let elementsat = this.at.elements;
+    let f = new Vector3([elementsat[0], elementsat[1], elementsat[2]]); // normalized vector for lookVector
+    f = f.sub(this.eye);
+
     f.normalize();
-    f.mul(this.speed);
-    this.eye += f;
-    this.at += f;
+
+    f = f.mul(this.speed);
+
+    this.eye = this.eye.add(f);
+    this.at = this.at.add(f);
+    console.log("moveForward 2:", this.eye, this.at, this.up);
+
     this.updateViewMatrix();
+    console.log("updated: ", this.viewMatrix.elements);
   }
   moveBackward() {
-    let f = new Vector3().set(this.at); // normalized vector for lookVector
-    f.sub(this.eye);
+    let elementsat = this.at.elements;
+    let f = new Vector3([elementsat[0], elementsat[1], elementsat[2]]); // normalized vector for lookVector
+    f = f.sub(this.eye);
     f.normalize();
-    f.mul(-this.speed);
-    this.eye += f;
-    this.at += f;
+    f = f.mul(-this.speed);
+    this.eye = this.eye.add(f);
+    this.at = this.at.add(f);
     this.updateViewMatrix();
   }
   moveLeft() {
-    let f = new Vector3().set(this.at);
-    f.sub(this.eye);
+    let elementsat = this.at.elements;
+    let f = new Vector3([elementsat[0], elementsat[1], elementsat[2]]); // normalized vector for lookVector
+    f = f.sub(this.eye);
     f.normalize();
-    let s = new Vector3().set(f);
-    s.cross(this.up);
+    let s = new Vector3([f.elements[0], f.elements[1], f.elements[2]]);
+    s = s.cross(this.up);
     s.normalize();
-    s.mul(-this.speed);
+    s = s.mul(-this.speed);
 
-    this.eye += s;
-    this.at += s;
+    this.eye = this.eye.add(s);
+    this.at = this.at.add(s);
     this.updateViewMatrix();
   }
   moveRight() {
-    let f = new Vector3().set(this.at);
-    f.sub(this.eye);
+    let elementsat = this.at.elements;
+    let f = new Vector3([elementsat[0], elementsat[1], elementsat[2]]); // normalized vector for lookVector
+    f = f.sub(this.eye);
     f.normalize();
-    let s = new Vector3().set(f);
-    s.cross(this.up);
+    let s = new Vector3([f.elements[0], f.elements[1], f.elements[2]]);
+    s = s.cross(this.up);
     s.normalize();
-    s.mul(this.speed);
+    s = s.mul(this.speed);
 
-    this.eye += s;
-    this.at += s;
+    this.eye = this.eye.add(s);
+    this.at = this.at.add(s);
     this.updateViewMatrix();
   }
 }

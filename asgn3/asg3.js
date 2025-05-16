@@ -285,6 +285,9 @@ function main() {
   connectVariablesToGLSL();
   addActionsForHtmlUI();
 
+  // From 3.7 Handling input
+  document.onkeydown = keydown;
+
   // From 3.2/3.3 of tutorial
   initTextures(gl, 0);
 
@@ -321,10 +324,17 @@ function rotateLocalCenter(matrix, angle, cx, cy, cz) {
   matrix.translate(-cx, -cy, -cz);
 }
 
+keycodeBind = {
+  87: () => g_camera.moveForward(), // W
+  65: () => g_camera.moveLeft(), // A
+  83: () => g_camera.moveBackward(), // S
+  68: () => g_camera.moveRight(), // D
+};
+
 function keydown(ev) {
-  if (ev.keyCode == 65) {
-    // keycode A
-  }
+  const handler = keycodeBind[ev.keyCode];
+  if (handler) handler();
+  console.log("keydown:", g_camera.eye.elements);
 }
 
 green = [0.0, 1.0, 0.0, 1.0];
