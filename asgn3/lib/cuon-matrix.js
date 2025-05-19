@@ -906,32 +906,87 @@ var Vector3 = function (opt_src) {
   }
   this.elements = v;
 };
+/**
+ * Set the components of this vector.
+ * @param {Vector3|Array<number>|number} srcOrX Source vector, array of 3 numbers, or the x component.
+ * @param {number} [y] The y component (if srcOrX is the x component).
+ * @param {number} [z] The z component (if srcOrX is the x component).
+ * @return {Vector3} this
+ */
+Vector3.prototype.set = function (srcOrX, y, z) {
+  var v = this.elements;
+  if (srcOrX && typeof srcOrX === "object") {
+    if (srcOrX.hasOwnProperty("elements") && srcOrX.elements.length === 3) {
+      // Another Vector3
+      v[0] = srcOrX.elements[0];
+      v[1] = srcOrX.elements[1];
+      v[2] = srcOrX.elements[2];
+    } else if (Array.isArray(srcOrX) && srcOrX.length === 3) {
+      // An array [x, y, z]
+      v[0] = srcOrX[0];
+      v[1] = srcOrX[1];
+      v[2] = srcOrX[2];
+    } else {
+      // Handle or throw error for other object types if needed
+      console.error("Vector3.set: Invalid object source provided.");
+    }
+  } else if (
+    arguments.length === 3 &&
+    typeof srcOrX === "number" &&
+    typeof y === "number" &&
+    typeof z === "number"
+  ) {
+    // Individual components x, y, z
+    v[0] = srcOrX;
+    v[1] = y;
+    v[2] = z;
+  } else {
+    console.error("Vector3.set: Invalid arguments provided.");
+  }
+  return this;
+};
 
 /**
- * Add another vector to this vector.
+ * Add another vector to this vector, modifying this vector.
  * @param {Vector3} other The vector to add.
- * @return {Vector3} New vector with the result of addition.
+ * @return {Vector3} this
  */
 Vector3.prototype.add = function (other) {
-  return new Vector3([
-    this.elements[0] + other.elements[0],
-    this.elements[1] + other.elements[1],
-    this.elements[2] + other.elements[2],
-  ]);
+  var te = this.elements;
+  var oe = other.elements;
+  te[0] += oe[0];
+  te[1] += oe[1];
+  te[2] += oe[2];
+  return this;
 };
 
 /**
- * Custom sub function
- * @param {Vector3} other
- * @returns Vector3 of new array
+ * Subtract another vector from this vector, modifying this vector.
+ * @param {Vector3} other The vector to subtract.
+ * @return {Vector3} this
  */
 Vector3.prototype.sub = function (other) {
-  return new Vector3([
-    this.elements[0] - other.elements[0],
-    this.elements[1] - other.elements[1],
-    this.elements[2] - other.elements[2],
-  ]);
+  var te = this.elements;
+  var oe = other.elements;
+  te[0] -= oe[0];
+  te[1] -= oe[1];
+  te[2] -= oe[2];
+  return this;
 };
+
+/**
+ * Multiply this vector by a scalar, modifying this vector.
+ * @param {number} scalar The scalar to multiply by.
+ * @return {Vector3} this
+ */
+Vector3.prototype.mul = function (scalar) {
+  var te = this.elements;
+  te[0] *= scalar;
+  te[1] *= scalar;
+  te[2] *= scalar;
+  return this;
+};
+
 /**
  * Custom cross function
  * @param {Vector3} other
@@ -971,16 +1026,6 @@ Vector3.prototype.normalize = function () {
   v[1] = d * g;
   v[2] = e * g;
   return this;
-};
-/**
- * Custom multiply function
- * @param {Vector3} other
- * @returns Vector3 of new vector
- */
-Vector3.prototype.mul = function (scalar) {
-  const a = this.elements;
-
-  return new Vector3([a[0] * scalar, a[1] * scalar, a[2] * scalar]);
 };
 
 /**

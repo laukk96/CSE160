@@ -21,7 +21,8 @@ var FSHADER_SOURCE = `
     precision mediump float;
     varying vec2 v_UV;
     uniform vec4 u_FragColor;
-    uniform sampler2D u_Sampler0;
+    uniform sampler2D u_Sampler0; // sky.jpg
+    uniform sampler2D u_Sampler1; // grass.jpg
     uniform int u_whichTexture;
     void main() {
         if (u_whichTexture == -2){
@@ -30,8 +31,9 @@ var FSHADER_SOURCE = `
             gl_FragColor = vec4(v_UV,1.0,1.0);
         } else if (u_whichTexture == 0){
             gl_FragColor = texture2D(u_Sampler0, v_UV);
-            // gl_FragColor = vec4(v_UV,1.0,1.0);
-        } else{
+        } else if (u_whichTexture == 1){
+            gl_FragColor = texture2D(u_Sampler1, v_UV);
+        }else{
             gl_FragColor = vec4(.1,.2,.2,.1); // error, reddish
             // gl_FragColor = vec4(v_UV,1.0,1.0);
         }
@@ -49,32 +51,43 @@ let u_GlobalRotateMatrix;
 var u_ModelMatrix;
 let u_ProjMatrix;
 let u_ViewMatrix;
-let u_Sampler0;
-let u_whichTexture;
+var u_Sampler0;
+var u_Sampler1;
+var u_whichTexture;
 /** @type {Camera} */
 let g_camera;
 
 // --------- TextureQuad.js Book Example ---------
 function initTextures(gl, n) {
-  var image = new Image(); // Create the image object
-  if (!image) {
+  var image0 = new Image(); // Create the image object
+  if (!image0) {
     console.log("Failed to create the image object");
     return false;
   }
   // Register the event handler to be called on loading an image
-  image.onload = function () {
-    sendImageToTEXTURE0(gl, n, u_Sampler0, image);
+  image0.onload = function () {
+    sendImageToTEXTUREi(gl, n, u_Sampler0, image0, gl.TEXTURE0, 0);
   };
   // Tell the browser to load an image
-  image.src = "../resources/sky.jpg";
+  image0.src = "../resources/sky.jpg";
 
-  // TODO: Add more textures
-
+  // Texture 1: Grass block
+  var image1 = new Image();
+  if (!image1) {
+    console.log("Failed to create the image object");
+    return false;
+  }
+  // Register the event handler to be called on loading an image
+  image1.onload = function () {
+    sendImageToTEXTUREi(gl, n, u_Sampler1, image1, gl.TEXTURE1, 1);
+  };
+  // Tell the browser to load an image
+  image1.src = "../resources/iceperf.jpg";
   return true;
 }
 
-// sendImageToTEXTURE0 — Sends the texture to GLSL
-function sendImageToTEXTURE0(gl, n, u_Sampler, image) {
+// Sends the texture to GLSL
+function sendImageToTEXTUREi(gl, n, u_Sampler, image, glTexture, i) {
   var texture = gl.createTexture(); // Create a texture object on the GPU
   if (!texture) {
     console.log("Failed to create the texture object");
@@ -84,7 +97,7 @@ function sendImageToTEXTURE0(gl, n, u_Sampler, image) {
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); // Flip the image's y axis
   // note: originally the image has y=0 on the top
   // Enable texture unit0
-  gl.activeTexture(gl.TEXTURE0);
+  gl.activeTexture(glTexture);
   // Bind the texture object to the target
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -95,7 +108,7 @@ function sendImageToTEXTURE0(gl, n, u_Sampler, image) {
 
   // Set the texture unit 0 to the sampler
   // note: Tells GLSL to set u_Sampler equal to texture unit 0
-  gl.uniform1i(u_Sampler, 0);
+  gl.uniform1i(u_Sampler, i);
 
   gl.clear(gl.COLOR_BUFFER_BIT); // Clear <canvas>
 
@@ -186,13 +199,20 @@ function connectVariablesToGLSL() {
     return;
   }
 
-  // -------------- Textures --------------
+  // -------------- Textures: u_Sampler --------------
   // Get the storage location of u_Sampler0
   u_Sampler0 = gl.getUniformLocation(gl.program, "u_Sampler0");
   if (!u_Sampler0) {
     console.log("Failed to get the storage location of u_Sampler0");
     return false;
   }
+  u_Sampler1 = gl.getUniformLocation(gl.program, "u_Sampler1");
+  if (!u_Sampler1) {
+    console.log("Failed to get the storage location of u_Sampler1");
+    return false;
+  }
+
+  // -------------- Textures: u_whichTexture --------------
   u_whichTexture = gl.getUniformLocation(gl.program, "u_whichTexture");
   if (!u_whichTexture) {
     console.log("Failed to get the storage location of u_whichTexture");
@@ -281,9 +301,11 @@ function sendPerformanceStatsToHTML(text, id) {
 
 // Main
 function main() {
+  initMap();
   setupWebGL();
   connectVariablesToGLSL();
   addActionsForHtmlUI();
+  addPointerLockAndMouseControls();
 
   // From 3.7 Handling input
   document.onkeydown = keydown;
@@ -324,18 +346,57 @@ function rotateLocalCenter(matrix, angle, cx, cy, cz) {
   matrix.translate(-cx, -cy, -cz);
 }
 
+// --------------- Input Handler ---------------
+
 keycodeBind = {
   87: () => g_camera.moveForward(), // W
   65: () => g_camera.moveLeft(), // A
   83: () => g_camera.moveBackward(), // S
   68: () => g_camera.moveRight(), // D
+
+  81: () => g_camera.panLeft(), // Q
+  69: () => g_camera.panRight(), // E
 };
 
 function keydown(ev) {
   const handler = keycodeBind[ev.keyCode];
   if (handler) handler();
-  console.log("keydown:", g_camera.eye.elements);
 }
+
+// --------------- Map Creator ---------------
+
+var map = Array(32)
+  .fill()
+  .map(() => Array(32).fill(0));
+
+function initMap() {
+  for (let i = 0; i < 32; i++) {
+    for (let j = 0; j < 32; j++) {
+      map[i][j] = Math.random() < 0.3 ? Math.floor(Math.random() * 5) + 1 : 0;
+    }
+  }
+  // console.log("map: ", map.flat().join(" "));
+}
+
+let mapDiff = 16;
+let smallScale = 0.5;
+
+function drawMap() {
+  var wallcolor = [0.0, 0.5, 0.2, 1.0];
+  for (let i = 0; i < 32; i++) {
+    for (let j = 0; j < 32; j++) {
+      let height = map[i][j];
+      for (let h = 0; h < height; h++) {
+        let wall = new Matrix4();
+        wall.translate(0, -0.75, 0);
+        wall.translate((i - mapDiff) * smallScale, h * smallScale, (j - mapDiff) * smallScale);
+        wall.scale(smallScale, smallScale, smallScale);
+        drawCubeFast(wall, wallcolor, 1);
+      }
+    }
+  }
+}
+// --------------- Render function ---------------
 
 green = [0.0, 1.0, 0.0, 1.0];
 lightwhite = [0.9, 0.9, 0.9, 1.0];
@@ -354,25 +415,7 @@ function renderAllShapes() {
   modelMatrix.rotate(g_globalAngle, 0, 1, 0);
   gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
-  // ---------- Test Projection Setup ----------
-  // let viewMatrix = new Matrix4().setLookAt(
-  //   3,
-  //   3,
-  //   3, // eye
-  //   0,
-  //   0,
-  //   0, // at
-  //   0,
-  //   1,
-  //   0 // up
-  // );
-  // gl.uniformMatrix4fv(u_ViewMatrix, false, viewMatrix.elements);
-
-  // let projMatrix = new Matrix4().setPerspective(60, canvas.width / canvas.height, 0.1, 100);
-  // gl.uniformMatrix4fv(u_ProjMatrix, false, projMatrix.elements);
-
   // ---------- Camera.js Projection Setup ----------
-
   // view matrix perspective
   gl.uniformMatrix4fv(u_ViewMatrix, false, g_camera.viewMatrix.elements);
   // console.log("viewMatrix:", g_camera.viewMatrix.elements);
@@ -384,7 +427,96 @@ function renderAllShapes() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   //   gl.clear(gl.COLOR_BUFFER_BIT);
 
+  // --------------- Terrain ------------------
+  drawGroundCube();
+  drawSkyBox();
+  drawMap();
   // --------------- Penguin Builder ---------------
+  drawPenguin();
+
+  // console.log("rightPupil coords:" + rightPupil.elements[12], rightPupil.elements[13], rightPupil.elements[14] + "\nmouseCoords: " + g_mouseCoords.x + ", " + g_mouseCoords.y);
+
+  let duration = performance.now() - startTime;
+  sendPerformanceStatsToHTML(
+    "ping (ms): " + Math.floor(duration) + " | fps: " + Math.floor(10000 / duration) / 10,
+    "numdot"
+  );
+}
+
+// ----------- drawCube --------------
+function drawCube(M, targetColor = [0.8, 0.8, 0.8, 1.0], textureNum = -2) {
+  var cube = new Cube();
+  cube.color = targetColor;
+  cube.textureNum = textureNum;
+  cube.matrix = M;
+  cube.render();
+}
+
+function drawCubeFast(M, targetColor = [0.8, 0.8, 0.8, 1.0], textureNum = -2) {
+  var cube = new Cube();
+  cube.color = targetColor;
+  cube.textureNum = textureNum;
+  cube.matrix = M;
+  cube.renderFast();
+}
+
+var g_startTime = performance.now() / 1000.0;
+var g_seconds = performance.now() / 1000.0 - g_startTime;
+
+function tick() {
+  // global tick variable update
+  g_seconds = performance.now() / 1000.0 - g_startTime;
+  // console.log(g_seconds);
+
+  renderAllShapes();
+  requestAnimationFrame(tick);
+}
+
+function handleMouseMove(event) {
+  g_mouseCoords = convertToWebGLCoords(event);
+}
+
+function convertToWebGLCoords(event) {
+  const rect = canvas.getBoundingClientRect(); // Get canvas position and size
+
+  // Calculate mouse position relative to the canvas's top-left corner
+  const pixelX = event.clientX - rect.left;
+  const pixelY = event.clientY - rect.top;
+
+  // Convert pixel coordinates to WebGL clip space coordinates
+  const clipX = (pixelX / canvas.width) * 2 - 1;
+  // Flip Y axis: (pixelY / canvas.height) gives 0 at top, 1 at bottom
+  // We want 1 at top, -1 at bottom
+  const clipY = 1 - (pixelY / canvas.height) * 2;
+
+  return { x: clipX, y: clipY };
+}
+
+function calculateMouseToPupilDifferential(worldposX, worldposY) {
+  var xdiff = g_mouseCoords.x - worldposX;
+  var ydiff = g_mouseCoords.y - worldposY;
+
+  return { xd: Math.max(-1, Math.min(xdiff * 3, 1)), yd: Math.max(-1, Math.min(ydiff * 3, 1)) };
+}
+
+function drawSkyBox() {
+  const skyboxScale = 1000;
+  var skybox = new Matrix4();
+  skybox.setTranslate(-50, -1, -50);
+  skybox.scale(skyboxScale, skyboxScale, skyboxScale);
+  drawCube(skybox, [0.1, 0.1, 0.1, 1.0], 0);
+}
+
+function drawGroundCube() {
+  var cubematrix = new Matrix4();
+  groundColor = [0.8, 0.8, 0.8, 1.0];
+  cubematrix.setTranslate(0, 0, 0);
+  cubematrix.translate(-18 / 2, -0.8, -18 / 2);
+  cubematrix.scale(18, 0.1, 18);
+  drawCube(cubematrix, groundColor);
+}
+
+function drawPenguin() {
   // Body Cube
   var targetAngle;
 
@@ -394,8 +526,10 @@ function renderAllShapes() {
   var bodyMatrix = new Matrix4();
   bodyColor = [0.2, 0.2, 0.2, 1.0];
 
+  var mapYDiff = Math.max(map[15][15], map[15][16], map[16][15], map[16][16]) * 0.5;
+
   // bodyMatrix.setTranslate(0, 0, 0);
-  bodyMatrix.setTranslate(-0.25, -0.5, -0.25);
+  bodyMatrix.setTranslate(-0.25, -0.5 + mapYDiff, -0.25);
   bodyMatrix.translate(bodyx / 2, bodyy / 2, bodyz / 2);
   targetAngle = g_animationBoolean ? 30 * Math.sin(g_seconds) : g_torsoAngle;
   var bodyRotAxisX = g_animationBoolean ? 1 * Math.sin(g_seconds / 4) : 1;
@@ -540,59 +674,48 @@ function renderAllShapes() {
   rightEyeShine.translate(0.025, eyey * 0.55, -eyez * 0.5);
   rightEyeShine.scale(pupil_sx * 0.25, pupil_sy * 0.25, pupil_sz * 0.25);
   drawCube(rightEyeShine, lightwhite);
+}
 
-  // console.log("rightPupil coords:" + rightPupil.elements[12], rightPupil.elements[13], rightPupil.elements[14] + "\nmouseCoords: " + g_mouseCoords.x + ", " + g_mouseCoords.y);
-
-  let duration = performance.now() - startTime;
-  sendPerformanceStatsToHTML(
-    "ping (ms): " + Math.floor(duration) + " | fps: " + Math.floor(10000 / duration) / 10,
-    "numdot"
+function addPointerLockAndMouseControls() {
+  // Request pointer lock when canvas is clicked
+  canvas.addEventListener(
+    "click",
+    () => {
+      // Keep the fallback for the method call itself
+      canvas.requestPointerLock = canvas.requestPointerLock;
+      if (canvas.requestPointerLock) {
+        canvas.requestPointerLock();
+      } else {
+        console.warn("Pointer Lock API not supported by this browser.");
+      }
+    },
+    false
   );
-}
 
-function drawCube(M, targetColor, textureNum = -2) {
-  var cube = new Cube();
-  cube.color = targetColor;
-  cube.textureNum = textureNum;
-  cube.matrix = M;
-  cube.render();
-}
+  // Handle pointer lock state changes
+  document.addEventListener("pointerlockchange", lockChangeAlert, false);
 
-var g_startTime = performance.now() / 1000.0;
-var g_seconds = performance.now() / 1000.0 - g_startTime;
+  function lockChangeAlert() {
+    // Check against the standard document.pointerLockElement
+    if (document.pointerLockElement === canvas) {
+      if (!g_camera.isPointerLocked) {
+        console.log("Pointer Lock: Engaged");
+        g_camera.isPointerLocked = true;
+        document.addEventListener("mousemove", handleCameraMouseMove, false);
+      }
+    } else {
+      console.log("Pointer Lock: Disengaged");
+      g_camera.isPointerLocked = false;
+      document.removeEventListener("mousemove", handleCameraMouseMove, false);
+    }
+  }
 
-function tick() {
-  // global tick variable update
-  g_seconds = performance.now() / 1000.0 - g_startTime;
-  // console.log(g_seconds);
-
-  renderAllShapes();
-  requestAnimationFrame(tick);
-}
-
-function handleMouseMove(event) {
-  g_mouseCoords = convertToWebGLCoords(event);
-}
-
-function convertToWebGLCoords(event) {
-  const rect = canvas.getBoundingClientRect(); // Get canvas position and size
-
-  // Calculate mouse position relative to the canvas's top-left corner
-  const pixelX = event.clientX - rect.left;
-  const pixelY = event.clientY - rect.top;
-
-  // Convert pixel coordinates to WebGL clip space coordinates
-  const clipX = (pixelX / canvas.width) * 2 - 1;
-  // Flip Y axis: (pixelY / canvas.height) gives 0 at top, 1 at bottom
-  // We want 1 at top, -1 at bottom
-  const clipY = 1 - (pixelY / canvas.height) * 2;
-
-  return { x: clipX, y: clipY };
-}
-
-function calculateMouseToPupilDifferential(worldposX, worldposY) {
-  var xdiff = g_mouseCoords.x - worldposX;
-  var ydiff = g_mouseCoords.y - worldposY;
-
-  return { xd: Math.max(-1, Math.min(xdiff * 3, 1)), yd: Math.max(-1, Math.min(ydiff * 3, 1)) };
+  // Handle mouse movement
+  function handleCameraMouseMove(event) {
+    if (g_camera.isPointerLocked) {
+      const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+      const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+      g_camera.processMouseMovement(movementX, movementY);
+    }
+  }
 }
