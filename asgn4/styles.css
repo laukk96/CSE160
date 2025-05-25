@@ -1,0 +1,23 @@
+
+
+#animationButton {
+    width: 100px;
+    height:20px;
+    /* padding: 10px 20px;  */
+    border-radius:5px;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    border-width:0px;
+    box-shadow: 0px 5px 10px rgb(18,18,18);
+    background-color: rgb(0, 220, 50);
+    color: rgb(255,255,255);
+    transition: background-color 0.25s cubic-bezier(0.075, 0.82, 0.165, 1), transform 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
+    margin-bottom: 10px;
+}
+
+#animationButton:hover {
+    transform:scale(1.05);
+}
+
+/* #animationButton:active {
+    background-color: rgb(155,255,0);
+} */

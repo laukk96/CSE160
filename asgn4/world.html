@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Asgn4 Lighting</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+      Please use a browser that supports "canvas"
+    </canvas>
+
+    <script src="lib/cuon-utils.js"></script>
+    <script src="lib/cuon-matrix.js"></script>
+    <script src="lib/webgl-debug.js"></script>
+    <script src="lib/webgl-utils.js"></script>
+    <script src="Point.js"></script>
+    <script src="Triangle.js"></script>
+    <script src="Circle.js"></script>
+    <script src="Cube.js"></script>
+    <script src="Camera.js"></script>
+    <script src="asg4.js"></script>
+
+    <form id="drawForm">
+      <p id="numdot">___</p>
+      <p id="notesToGrader">
+        Notes to Grader: <br />Hello! I have all the features except for the creative ones like:
+      </p>
+
+      <!-- Top Bar -->
+      <input type="button" value="Animation" id="animationButton" />
+      <br />
+
+      <!-- Sliders -->
+      <label for="angleSlide">Camera Angle X</label>
+      <input type="range" id="angleSlide" min="0" max="360" value="180" />
+      <br />
+
+      <!-- Fin Slide -->
+      <label for="finSlide">Fin Angle</label>
+      <input type="range" id="finSlide" min="0" max="120" value="0" />
+      <br />
+
+      <!-- Foot Angle -->
+      <label for="footSlide">Foot Angle</label>
+      <input type="range" id="footSlide" min="-30" max="30" value="0" />
+      <br />
+
+      <!-- Neck Angle -->
+      <label for="neckSlide">Neck Angle</label>
+      <input type="range" id="neckSlide" min="-30" max="30" value="0" />
+      <br />
+
+      <!-- Torso Angle -->
+      <label for="torsoSlide">Torso Angle</label>
+      <input type="range" id="torsoSlide" min="-45" max="45" value="0" />
+      <br />
+
+      <!-- Beak Angle -->
+      <label for="beakSlide">Beak Angle</label>
+      <input type="range" id="beakSlide" min="0" max="30" value="0" />
+    </form>
+    <p>info: kylau@ucsc.edu</p>
+  </body>
+</html>
