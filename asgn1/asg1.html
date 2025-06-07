@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Draw a blue rectangle (canvas version)</title>
+        <link rel="stylesheet" href="styles.css"/>
+    </head>
+    <body onload="main()">
+        <canvas id="webgl" width="400" height="400">
+            Please use a browser that supports "canvas"
+        </canvas>
+
+        <script src="lib/cuon-utils.js"></script>
+        <script src="lib/webgl-debug.js"></script>
+        <script src="lib/webgl-utils.js"></script>
+        <script src="Point.js"></script>
+        <script src="Triangle.js"></script>
+        <script src="Circle.js"></script>
+        <script src="asg1.js"></script>
+
+        <form id="drawForm">
+            <p id="numdot">___</p>
+            
+            <input type="button" value="(unfinished)" id="green"/>
+            <input type="button" value="Green" id="green"/>
+            <input type="button" value="Red" id="red"/> 
+            <input type="button" value="Clear" id="clearButton"/> 
+            <br>
+
+            <input type="button" value="Point" id="pointButton"/>
+            <input type="button" value="Triangle" id="triangleButton"/> 
+            <input type="button" value="Circle" id="circleButton"/> 
+            <br>
+
+            
+            <label for="redSlide">Red</label>
+            <input type="range" id="redSlide" min="0" max="255"> <br>
+
+            <label for="greenSlide">Green</label>
+            <input type="range" id="greenSlide" min="0" max="255"> <br>
+
+            <label for="blueSlide">Blue</label>
+            <input type="range" id="blueSlide" min="0" max="255"> <br>
+
+            <label for="sizeSlide">Size</label>
+            <input type="range" id="sizeSlide" min="1" max="100" value="10"> <br>
+
+            <label for="segmentSlide">Circle Segments</label>
+            <input type="range" id="segmentSlide" min="6" max="60" value="12"> <br>
+        </form>
+        <p>info: kylau@ucsc.edu</p>
+    </body>
+</html>
