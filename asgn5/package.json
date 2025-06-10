@@ -7,7 +7,6 @@
     "vite": "^6.3.5"
   },
   "name": "asgn5",
-  "homepage": "https://laukk96.github.io/CSE160/asgn5/dist",
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
