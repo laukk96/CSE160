@@ -13,13 +13,54 @@
       }
       canvas {
         width: 100%;
-        height: 100%;
+        height: 70vh;
         display: block;
+        margin: 0 auto;
         /* background: url("resources/textures/nightsky_black.png") no-repeat center center; */
         /* background-size: cover; */
       }
+      .boldwow {
+        color: yellow;
+        font-weight: bold;
+        animation: wowPulse 1.5s infinite ease-in-out;
+      }
+
+      /* Keyframes for pulsing effect */
+      @keyframes wowPulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 0.7;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
     </style>
-    <script type="module" crossorigin src="/CSE160/asgn5/dist/assets/index-CsTCZuSc.js"></script>
+    <script type="module" crossorigin src="/CSE160/asgn5/assets/index-C2mJ-Q4c.js"></script>
   </head>
-  <body></body>
+  <body>
+    <p>
+      <u>Note to graders</u>: Here is my submission, inspired by the hit indie game
+      <b>Little Nightmares</b>.
+    </p>
+    <ol>
+      <li><b>Textures</b> — Wood Texture on the ground cube</li>
+      <li><b>3D Models</b> — 9 Different GLB files from sketch fab (and many cardboard boxes)</li>
+      <li><b>Controls</b> — Orbital Controls</li>
+      <li>
+        <b>Light</b> — Ambient light, Directional light (center), and Point Lights (cardboard boxes)
+      </li>
+      <li><b>Skybox</b> — Dark night sky filled with stars</li>
+      <li>
+        <b class="boldwow">Wow point</b> — The scene is intentionally crafted to be dark, antique,
+        and horrific, like the original game. The cardboard boxes in front represent rays of hope,
+        as they offer hiding spots to the monsters lurking in the darkness.
+      </li>
+    </ol>
+  </body>
 </html>
