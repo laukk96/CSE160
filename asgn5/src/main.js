@@ -43,7 +43,7 @@ const renderer = new THREE.WebGLRenderer({
   canvas,
   alpha: true,
 });
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.8);
 document.body.appendChild(renderer.domElement);
 
 // ============= control setup =============
@@ -64,18 +64,19 @@ const intensity = -0.02;
 const ambientlight = new THREE.AmbientLight(color, intensity);
 scene.add(ambientlight);
 
-// ============= Point Light =============
-const pointlight1 = new THREE.PointLight(0xffffff, 1, 100);
-pointlight1.intensity = 10;
-pointlight1.position.set(1, 2.5, 1);
-pointlight1.castShadow = true;
-scene.add(pointlight1);
+// ============= Directional Light =============
+const dirLight1 = new THREE.DirectionalLight(0xffffff, 1);
+dirLight1.intensity = 10;
+dirLight1.position.set(1, 2.5, 1);
+dirLight1.target.position.set(0, 0, 0);
+dirLight1.castShadow = true;
+scene.add(dirLight1);
 
 // ============= Sphere: Glowing Lightbulb =============
 const lightbulb = new THREE.SphereGeometry(0.1, 32, 32);
 const bulbMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
 const lightbulbMesh = new THREE.Mesh(lightbulb, bulbMaterial);
-lightbulbMesh.position.copy(pointlight1.position);
+lightbulbMesh.position.copy(dirLight1.position);
 scene.add(lightbulbMesh);
 
 // ============= ground cube =============
@@ -291,7 +292,7 @@ function spawnManyCardboard(maxNum) {
     );
   }
 }
-spawnManyCardboard(12); // meets 10 object quota
+spawnManyCardboard(20); // meets 3d object quota
 
 // ============= MAIN animate() =============
 
