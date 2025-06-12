@@ -66,7 +66,7 @@ scene.add(ambientlight);
 
 // ============= Directional Light =============
 const dirLight1 = new THREE.DirectionalLight(0xffffff, 1);
-dirLight1.intensity = 10;
+dirLight1.intensity = 0.5;
 dirLight1.position.set(1, 2.5, 1);
 dirLight1.target.position.set(0, 0, 0);
 dirLight1.castShadow = true;
