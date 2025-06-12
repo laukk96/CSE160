@@ -66,17 +66,24 @@ scene.add(ambientlight);
 
 // ============= Directional Light =============
 const dirLight1 = new THREE.DirectionalLight(0xffffff, 1);
-dirLight1.intensity = 0.5;
+dirLight1.intensity = 0.1;
 dirLight1.position.set(1, 2.5, 1);
 dirLight1.target.position.set(0, 0, 0);
 dirLight1.castShadow = true;
 scene.add(dirLight1);
 
+// ============= Point Light — Light Bulb ==============
+const pointlight1 = new THREE.PointLight(0xffffff, 1, 100);
+pointlight1.intensity = 10;
+pointlight1.position.set(1, 2.5, 1);
+pointlight1.castShadow = true;
+scene.add(pointlight1);
+
 // ============= Sphere: Glowing Lightbulb =============
 const lightbulb = new THREE.SphereGeometry(0.1, 32, 32);
 const bulbMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
 const lightbulbMesh = new THREE.Mesh(lightbulb, bulbMaterial);
-lightbulbMesh.position.copy(dirLight1.position);
+lightbulbMesh.position.copy(pointlight1.position);
 scene.add(lightbulbMesh);
 
 // ============= ground cube =============
